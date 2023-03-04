@@ -34,7 +34,7 @@
 /.cache
 /.vscode
 
+*.make
+
 compile_commands.json
 MakeFile
-
-/*.make

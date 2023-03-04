@@ -1,6 +1,7 @@
 #include "Application.hpp"
 #include "Glad/glad.h"
 #include "Shader/ShaderManager.hpp"
+#include "core/ElementBuffer.hpp"
 #include "core/VertexArray.hpp"
 #include "core/VertexBuffer.hpp"
 #include <GLFW/glfw3.h>
@@ -27,11 +28,16 @@ void App::init()
 
 void App::run(std::string_view const& vertex_shader_file, std::string_view const& fragment_shader_file)
 {
-
-    float vertcices[] = {
+    const float vertcices[] = {
         -0.5, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f
+        0.5f, -0.5f, 0.0f,
+        -0.5f, 0.5f, 0.0f,
+        0.5f, 0.5f, 0.0f
+    };
+
+    const unsigned int indices[] = {
+        0, 1, 3,
+        0, 2, 3
     };
 
     Shader shader("triangle");
@@ -43,6 +49,7 @@ void App::run(std::string_view const& vertex_shader_file, std::string_view const
 
     VertexArray vao;
     VertexBuffer vbo(vertcices, sizeof(vertcices));
+    ElementBuffer ebo(indices, sizeof(indices));
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
@@ -55,13 +62,15 @@ void App::run(std::string_view const& vertex_shader_file, std::string_view const
         shader.bind("triangle");
         vao.bind();
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         this->window.process_input();
 
         this->window.swap_buffers();
         this->window.poll_events();
     }
+
+    vbo.unbind();
 }
 
 }

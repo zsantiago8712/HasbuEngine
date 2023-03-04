@@ -14,5 +14,3 @@ private:
 };
 
 }
-
-int a();
