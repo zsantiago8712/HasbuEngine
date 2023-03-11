@@ -4,9 +4,9 @@ language "C++"
 cppdialect "C++20"
 toolset "gcc"
 
-includedirs {"../../OpenGL/App", "../Dependencies"}
+includedirs {"../../OpenGL/App", "../Dependencies", "../vendor/LA/src"}
 
-links {"Glad:shared", "Window:shared"}
+links {"Glad:shared", "Window:shared", "fmt"}
 
 files {"core/**.cpp", "Shader/**.cpp"}
 

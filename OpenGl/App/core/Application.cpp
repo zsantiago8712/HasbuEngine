@@ -1,11 +1,16 @@
 #include "Application.hpp"
 #include "Glad/glad.h"
-#include "Shader/ShaderManager.hpp"
-#include "core/ElementBuffer.hpp"
-#include "core/VertexArray.hpp"
-#include "core/VertexBuffer.hpp"
+#include <Shader/ShaderManager.hpp>
+#include <cmath>
+#include <core/ElementBuffer.hpp>
+#include <core/TextureManager.hpp>
+#include <core/VertexArray.hpp>
+#include <core/VertexBuffer.hpp>
+#include <core/VertexBufferLayout.hpp>
+
 #include <GLFW/glfw3.h>
-#include <iostream>
+#include <LA/la.hpp>
+#include <fmt/core.h>
 #include <string_view>
 
 void framebuffer_size_callback(GLFWwindow* window [[maybe_unused]], int width, int height);
@@ -17,57 +22,83 @@ void App::init()
     this->window.create();
     this->window.setFramebufferSizeCallback((void*)framebuffer_size_callback);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to load GLAD\n";
+        fmt::print(stderr, "Failed to load GLAD\n");
         exit(EXIT_FAILURE);
     }
-#ifdef DEBUG
-    std::cout << "OpenGL: " << glGetString(GL_VERSION) << "\n";
-    std::cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
-#endif
+
+    int nrAttrubutes;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttrubutes);
+    fmt::print("Maximum nr of vertex attributes supported: {}\n", nrAttrubutes);
 }
 
 void App::run(std::string_view const& vertex_shader_file, std::string_view const& fragment_shader_file)
 {
-    const float vertcices[] = {
-        -0.5, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        -0.5f, 0.5f, 0.0f,
-        0.5f, 0.5f, 0.0f
+
+    const float vertices[] = {
+        // positions                            // colors                           // texture coords
+        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom left
+        -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // top left
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f // bottom right
     };
 
     const unsigned int indices[] = {
-        0, 1, 3,
-        0, 2, 3
+        0, 1, 3, // first triangle
+        1, 2, 3 // second triangle
     };
 
     Shader shader("triangle");
-
-    shader.compile_shader("triangle", vertex_shader_file, TypeShader::VERTEX_SHADER);
-    shader.compile_shader("triangle", fragment_shader_file, TypeShader::FRAGMENT_SHADER);
+    shader.compile_shaders("triangle", vertex_shader_file, fragment_shader_file);
 
     shader.bind("triangle");
 
+    Texture tex("OpenGL/resources/textures/container.jpg");
+    Texture tex2("OpenGL/resources/textures/awesomeface.png");
+
     VertexArray vao;
-    VertexBuffer vbo(vertcices, sizeof(vertcices));
+    VertexBuffer vbo(vertices, sizeof(vertices));
     ElementBuffer ebo(indices, sizeof(indices));
+    VertexBufferLayout vbl;
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
+    vbl.push<float>(3);
+    vbl.push<float>(3);
+    vbl.push<float>(2);
 
-    while (this->window.should_close() != WindowState::CLOSE) {
+    vao.addBuffer(vbl);
 
+    shader.bind("triangle");
+    shader.setUniformI("triangle", "texture1", 0);
+    shader.setUniformI("triangle", "texture2", 1);
+
+    while (this->window.shouldClose() != WindowState::CLOSE) {
+
+        this->window.processInput();
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        tex.activate(GL_TEXTURE0);
+        tex2.activate(GL_TEXTURE1);
+
+        la::mat4 transform;
+        transform = la::translate(transform, la::vec3(0.5f, -0.5f, 0.0f));
+        transform = la::rotate(transform, la::vec3(0.0, 0.0, 1.0), static_cast<float>(Window::getTime()));
+
         shader.bind("triangle");
+        shader.setUniformM4f("triangle", "transform", la::getPointer(transform));
         vao.bind();
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
-        this->window.process_input();
+        transform = la::mat4 {};
+        transform = la::translate(transform, la::vec3(-0.5f, 0.5f, 0.0f));
+        transform = la::scale(transform, la::vec3 { sinf(static_cast<float>(Window::getTime())) });
+        transform = la::rotate(transform, la::vec3(0.0, 0.0, 1.0), static_cast<float>(Window::getTime()));
 
-        this->window.swap_buffers();
-        this->window.poll_events();
+        shader.setUniformM4f("triangle", "transform", la::getPointer(transform));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+        this->window.swapBuffers();
+        this->window.pollEvents();
     }
 
     vbo.unbind();

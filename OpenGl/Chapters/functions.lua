@@ -21,7 +21,8 @@ function programs(chapter_name, name)
         "Cocoa.framework",
         "IOKit.framework",
         "CoreVideo.framework",
-        "glfw"
+        "glfw",
+        "fmt"
     }
 
 

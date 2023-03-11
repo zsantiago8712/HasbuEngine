@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../defines.hpp"
 #include <string_view>
 
 // Forward declare GLFWwindow to avoid including glfw3.h
@@ -10,7 +11,7 @@ enum class WindowState {
     OPEN = 0x1,
 };
 
-class Window {
+class HB_API Window {
 
 public:
     Window() = default;
@@ -20,14 +21,15 @@ public:
 
     GLFWwindow* glfw_window;
     void create();
-    WindowState should_close();
-    void swap_buffers();
-    void poll_events() const;
+    WindowState shouldClose();
+    void swapBuffers();
+    void pollEvents() const;
     void setFramebufferSizeCallback(void* callback);
-    void process_input();
+    void processInput();
 
-    unsigned int get_height() const;
-    unsigned int get_width() const;
+    unsigned int getHeight() const;
+    unsigned int getWidth() const;
+    static double getTime();
 
 private:
     unsigned int width = 900;

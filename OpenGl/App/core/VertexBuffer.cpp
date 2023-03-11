@@ -1,5 +1,5 @@
 #include "VertexBuffer.hpp"
-#include "Glad/glad.h"
+#include <Glad/glad.h>
 
 namespace hasbu {
 VertexBuffer::VertexBuffer(const void* data, const unsigned size)

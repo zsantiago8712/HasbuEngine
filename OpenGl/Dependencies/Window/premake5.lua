@@ -15,6 +15,7 @@ project "Window"
         "IOKit.framework",
         "CoreVideo.framework",
         "glfw",
+        "fmt"
     }
 
     defines {
@@ -24,6 +25,9 @@ project "Window"
 
 
     files { "**.cpp" }
+    buildoptions {
+        "-fvisibility=hidden"
+    }
 
 
 

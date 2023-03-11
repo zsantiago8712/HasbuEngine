@@ -1,6 +1,6 @@
 #include "Window.hpp"
 #include <GLFW/glfw3.h>
-#include <iostream>
+#include <fmt/core.h>
 
 Window::Window(unsigned int _width, unsigned int _height, std::string_view const& window_name)
     : width(_width)
@@ -22,39 +22,44 @@ void Window::create()
     this->glfw_window = glfwCreateWindow(this->width, this->height, this->name.cbegin(), nullptr, nullptr);
 
     if (this->glfw_window == nullptr) {
-        std::cerr << "Failed to create Window\n";
+        fmt::print(stderr, "Failed to create Window\n");
         exit(EXIT_FAILURE);
     }
 
     glfwMakeContextCurrent(this->glfw_window);
 }
 
-WindowState Window::should_close()
+WindowState Window::shouldClose()
 {
     return glfwWindowShouldClose(this->glfw_window) ? WindowState::CLOSE : WindowState::OPEN;
 }
 
-void Window::swap_buffers()
+void Window::swapBuffers()
 {
     glfwSwapBuffers(this->glfw_window);
 }
 
-void Window::poll_events() const
+void Window::pollEvents() const
 {
     glfwPollEvents();
 }
 
-unsigned int Window::get_width() const
+unsigned int Window::getWidth() const
 {
     return this->width;
 }
 
-unsigned int Window::get_height() const
+unsigned int Window::getHeight() const
 {
     return this->height;
 }
 
-void Window::process_input()
+double Window::getTime()
+{
+    return glfwGetTime();
+}
+
+void Window::processInput()
 {
     if (glfwGetKey(this->glfw_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(this->glfw_window, true);

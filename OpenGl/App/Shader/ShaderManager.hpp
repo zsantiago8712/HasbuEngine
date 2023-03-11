@@ -4,25 +4,25 @@
 
 namespace hasbu {
 
-enum class TypeShader : unsigned int {
-    VERTEX_SHADER = 0x8B31,
-    FRAGMENT_SHADER = 0x8B30,
-};
-
 class Shader {
 
 public:
     explicit Shader(std::string_view const& shaderName);
 
-    void compile_shader(std::string_view const& shader_name, std::string_view const& shader_file_source, TypeShader type) const;
+    void insert(std::string_view const& shaderName);
+    void compile_shaders(std::string_view const& shader_name, std::string_view const& vertex_shader_file_source, std::string_view const& fragment_shader_file_source);
+
     void bind(std::string_view const& shader_name);
     void unbind(std::string_view const& shader_name);
+    unsigned int getShaderId(std::string_view const& shader_name) const;
+
+    void setUniformF(std::string_view const& shader_name, std::string_view const& uniform_name, float value);
+    void setUniformI(std::string_view const& shader_name, std::string_view const& uniform_name, int values);
+    void setUniformM4f(std::string_view const& shader_name, std::string_view const& uniform_name, const float* values);
 
 private:
-    std::string get_shader_from_file(std::string_view const& file_name) const;
+    static std::string get_shader_from_file(std::string_view const& file_name);
     std::unordered_map<std::string_view, unsigned int> tb_shaders;
-    unsigned int program_id = -1;
-    void check() const;
 };
 
 }
