@@ -1,11 +1,11 @@
-workspace "OpenGL"
+workspace "Hasbu"
     configurations { "Debug", "Release" }
     outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-    include "OpenGl/Dependencies/Window/"
-    include "OpenGl/Dependencies/Glad"
-    include "OpenGL/App"
-    include "OpenGL/Chapters"
+    include "Hasbu/vendor/Glad"
+    include "Hasbu/src"
+    -- include "Hasbu/Chapters"
+    include "Sandbox"
 
 
 newaction {
