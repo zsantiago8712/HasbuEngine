@@ -17,8 +17,8 @@ OpenGLContext::~OpenGLContext()
 
 void initializeOpenGL(void* context)
 {
-    auto openGL_context = static_cast<OpenGLContext*>(context);
-    glfwMakeContextCurrent(openGL_context->m_Window);
+    auto GL_context = static_cast<OpenGLContext*>(context);
+    glfwMakeContextCurrent(GL_context->m_Window);
     const int statusGLAD = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     if (!statusGLAD) {
         glfwTerminate();
@@ -26,10 +26,22 @@ void initializeOpenGL(void* context)
     }
 }
 
+
 void swapBuffersOpenGL(void* context)
 {
-    auto openGL_context = static_cast<OpenGLContext*>(context);
-    glfwSwapBuffers(openGL_context->m_Window);
+    auto GL_context = static_cast<OpenGLContext*>(context);
+    glfwSwapBuffers(GL_context->m_Window);
+}
+
+float getDeltaTimeOpenGL(void* context)
+{
+    auto GL_context = static_cast<OpenGLContext*>(context);
+
+    const auto current_frame = static_cast<float>(glfwGetTime());
+    GL_context->m_delta_time = current_frame - GL_context->m_last_frame_time;
+    GL_context->m_last_frame_time = current_frame;
+
+    return GL_context->m_delta_time;
 }
 
 // OpenGLContext::OpenGLContext(void* window)

@@ -29,6 +29,8 @@ void windowPollEvents(Unique<Window>& window);
 void windowUpdate(Unique<Window>& window);
 bool windowShouldClose(Unique<Window>& window);
 void windowSetTitle(Unique<Window>& window, const std::string_view& new_title);
+
 float windowGetAspectRatio(Unique<Window>& window);
+float windowGetDeltaTime(Unique<Window>& window);
 
 }

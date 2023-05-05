@@ -18,5 +18,4 @@ struct WindowData {
 
     Shared<GraphicsContext> m_Context;
 };
-
 }

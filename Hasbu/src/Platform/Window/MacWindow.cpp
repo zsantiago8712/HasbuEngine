@@ -78,6 +78,33 @@ float macWindowGetAspectRatio(void* window)
     return static_cast<float>(macWindow->m_Data.width) / static_cast<float>(macWindow->m_Data.height);
 }
 
+float macWindowGetDeltaTime(void* window)
+{
+    auto macWindow = static_cast<MacWindow*>(window);
+    return getDeltaTime(macWindow->m_Data.m_Context);
+}
+
+static void callBackError(int id, const char* description)
+{
+    fmt::print(stderr, "[Error]:{} {}\n", id, description);
+}
+
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
+static void sizeCallback(GLFWwindow* window, int width, int height)
+{
+
+    WindowData& attr = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+    attr.width = width;
+    attr.height = height;
+    fmt::print("Window Resize to: Width: [{}], Heigth: [{}]\n", attr.width, attr.height);
+    glViewport(0, 0, attr.width, attr.height);
+}
+
 // MacWindow::MacWindow(const WindowData& data)
 //     : Window(data)
 // {
@@ -128,24 +155,4 @@ float macWindowGetAspectRatio(void* window)
 //     return glfwWindowShouldClose(m_NativeWindow);
 // }
 
-static void callBackError(int id, const char* description)
-{
-    fmt::print(stderr, "[Error]: {}\n", description);
-}
-
-static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-}
-
-static void sizeCallback(GLFWwindow* window, int width, int height)
-{
-
-    WindowData& attr = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
-    attr.width = width;
-    attr.height = height;
-    fmt::print("Window Resize to: Width: [{}], Heigth: [{}]\n", attr.width, attr.height);
-    glViewport(0, 0, attr.width, attr.height);
-}
 }

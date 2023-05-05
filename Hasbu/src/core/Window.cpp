@@ -3,6 +3,7 @@
 #include "core/WindowData.hpp"
 #include "defines.hpp"
 #include <fmt/core.h>
+#include <functional>
 #include <string_view>
 
 using PollEventsFn = void (*)();
@@ -10,6 +11,7 @@ using UpdateFn = void (*)(void* window);
 using ShouldCloseFn = bool (*)(void* window);
 using SetTileFn = void (*)(void* window, const std::string_view& new_title);
 using GetAspectRatio = float (*)(void* window);
+using GetDeltaTime = float (*)(void* window);
 
 struct WindowPlatformFunctions {
     PollEventsFn pollEvents;
@@ -17,14 +19,16 @@ struct WindowPlatformFunctions {
     ShouldCloseFn shouldClose;
     SetTileFn setTile;
     GetAspectRatio getAspectRatio;
+    GetDeltaTime getDeltaTime;
+
     // otras funciones específicas de la plataforma
 };
 
 namespace Hasbu {
 
 static const WindowPlatformFunctions windowPlatformFunctions[] = {
-    { macWindowPollEvents,
-        macWindowUpdate, macWindowShouldClose, macWindowSetTile, macWindowGetAspectRatio }
+    { macWindowPollEvents, macWindowUpdate, macWindowShouldClose,
+        macWindowSetTile, macWindowGetAspectRatio, macWindowGetDeltaTime }
 };
 
 Unique<Window>
@@ -62,6 +66,12 @@ float windowGetAspectRatio(Unique<Window>& window)
 {
     const auto& functions = windowPlatformFunctions[static_cast<int>(window->platform)];
     return functions.getAspectRatio(window.get());
+}
+
+float windowGetDeltaTime(Unique<Window>& window)
+{
+    const auto& functions = windowPlatformFunctions[static_cast<int>(window->platform)];
+    return functions.getDeltaTime(window.get());
 }
 
 }

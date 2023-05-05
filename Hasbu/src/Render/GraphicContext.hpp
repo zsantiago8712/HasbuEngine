@@ -19,6 +19,7 @@ Shared<GraphicsContext> createGraphicsContext(void* window);
 
 void initializeGraphicsContext(Shared<GraphicsContext>& context);
 void swapBuffers(Shared<GraphicsContext>& context);
+float getDeltaTime(Shared<GraphicsContext>& context);
 
 // class GraphicsContext {
 

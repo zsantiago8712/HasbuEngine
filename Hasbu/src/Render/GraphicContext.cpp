@@ -3,18 +3,20 @@
 #include "defines.hpp"
 #include <fmt/core.h>
 
-using initializeFn = void (*)(void* context);
-using swapBuffersFn = void (*)(void* context);
+using InitializeFn = void (*)(void* context);
+using SwapBuffersFn = void (*)(void* context);
+using GetDeltaTime = float (*)(void* context);
 
 struct GraphicsContextApiFunctions {
-    initializeFn initialize;
-    swapBuffersFn swapBuffers;
+    InitializeFn initialize;
+    SwapBuffersFn swapBuffers;
+    GetDeltaTime getDeltaTime;
 };
 
 namespace Hasbu {
 
 static const GraphicsContextApiFunctions graphicsContextApiFunctions[] = {
-    { initializeOpenGL, swapBuffersOpenGL }
+    { initializeOpenGL, swapBuffersOpenGL, getDeltaTimeOpenGL }
 };
 
 Shared<GraphicsContext> createGraphicsContext(void* window)
@@ -38,6 +40,12 @@ void swapBuffers(Shared<GraphicsContext>& context)
     function.swapBuffers(context.get());
 }
 
+float getDeltaTime(Shared<GraphicsContext>& context)
+{
+    const auto& function = graphicsContextApiFunctions[static_cast<int>(context->api)];
+    return function.getDeltaTime(context.get());
+}
+
 // Shared<GraphicsContext> GraphicsContext::create(GraphicApi api, void* window)
 // {
 
@@ -53,4 +61,5 @@ void swapBuffers(Shared<GraphicsContext>& context)
 //         return nullptr;
 //     }
 // }
-}
+
+}  // namespace Hasbu

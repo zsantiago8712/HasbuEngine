@@ -4,9 +4,8 @@ class Sandbox : public Hasbu::App {
 
 public:
     Sandbox() = default;
-    ;
+
     ~Sandbox() = default;
-    ;
 };
 
 Hasbu::App* Hasbu::createApplication()

@@ -24,6 +24,8 @@ bool macWindowShouldClose(void* window);
 void macWindowSetTile(void* window, const std::string_view& title);
 float macWindowGetAspectRatio(void* window);
 
+float macWindowGetDeltaTime(void* window);
+
 // class MacWindow : public Window {
 // public:
 //     MacWindow(const WindowData& data);

@@ -11,10 +11,13 @@ struct OpenGLContext : public GraphicsContext {
     ~OpenGLContext();
 
     GLFWwindow* m_Window;
+    float m_delta_time;
+    float m_last_frame_time;
 };
 
 void initializeOpenGL(void* context);
 void swapBuffersOpenGL(void* context);
+float getDeltaTimeOpenGL(void* context);
 
 // class OpenGLContext : public GraphicsContext {
 // public:

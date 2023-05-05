@@ -8,6 +8,7 @@ namespace Hasbu {
 class App {
 public:
     App() = default;
+    ~App() = default;
     void init();
     void run(std::string_view const& vertex_shader_file, std::string_view const& fragment_shader_file);
 
