@@ -7,30 +7,10 @@ namespace Hasbu {
 
 struct GraphicsContext {
     GraphicsContext() = default;
-
-#ifdef OpenGL
-    GraphicApi api = GraphicApi::OPENGL;
-#elif defined Vulkan
-    GraphicApi api = GraphicApi::VULKAN;
-#endif
 };
 
-Shared<GraphicsContext> createGraphicsContext(void* window);
-
-void initializeGraphicsContext(Shared<GraphicsContext>& context);
-void swapBuffers(Shared<GraphicsContext>& context);
-float getDeltaTime(Shared<GraphicsContext>& context);
-
-// class GraphicsContext {
-
-// public:
-//     GraphicsContext() = default;
-//     virtual ~GraphicsContext() = default;
-
-//     virtual void initialize() = 0;
-//     virtual void swapBuffers() = 0;
-
-//     static Shared<GraphicsContext> create(GraphicApi api, void* window);
-// };
-
+Unique<GraphicsContext> createGraphicsContext(void* window);
+void initializeGraphicsContext(Unique<GraphicsContext>& context);
+void swapBuffers(Unique<GraphicsContext>& context);
+float getDeltaTime(Unique<GraphicsContext>& context);
 }

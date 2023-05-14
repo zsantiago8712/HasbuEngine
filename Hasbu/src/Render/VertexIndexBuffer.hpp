@@ -5,13 +5,7 @@
 
 namespace Hasbu {
 
-struct VertexBufferIndex {
-#ifdef OpenGL
-    GraphicApi api = GraphicApi::OPENGL;
-#elif defined Vulkan
-    GraphicApi api = GraphicApi::VULKAN;
-#endif
-};
+struct VertexBufferIndex {};
 
 Shared<VertexBufferIndex> createVertexBufferIndex(unsigned int* indices, unsigned int count);
 

@@ -1,3 +1,4 @@
+#include "defines.hpp"
 #define GLFW_INCLUDE_NONE
 #include "Platform/OpenGL/OpenGLContext.hpp"
 #include <GLFW/glfw3.h>
@@ -6,18 +7,13 @@
 
 namespace Hasbu {
 
-OpenGLContext::OpenGLContext(void* window)
-    : m_Window(static_cast<GLFWwindow*>(window)) {};
+OpenGLContext::OpenGLContext(GLFWwindow* window)
+    : m_Window(window) {};
 
-OpenGLContext::~OpenGLContext()
+void initializeOpenGL(Unique<GraphicsContext>& context)
 {
-    fmt::print("OPENGL CONTEXT DESTROYED\n");
-    glfwDestroyWindow(m_Window);
-}
+    auto GL_context = static_cast<OpenGLContext*>(context.get());
 
-void initializeOpenGL(void* context)
-{
-    auto GL_context = static_cast<OpenGLContext*>(context);
     glfwMakeContextCurrent(GL_context->m_Window);
     const int statusGLAD = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     if (!statusGLAD) {
@@ -26,16 +22,15 @@ void initializeOpenGL(void* context)
     }
 }
 
-
-void swapBuffersOpenGL(void* context)
+void swapBuffersOpenGL(Unique<GraphicsContext>& context)
 {
-    auto GL_context = static_cast<OpenGLContext*>(context);
+    auto GL_context = static_cast<OpenGLContext*>(context.get());
     glfwSwapBuffers(GL_context->m_Window);
 }
 
-float getDeltaTimeOpenGL(void* context)
+float getDeltaTimeOpenGL(Unique<GraphicsContext>& context)
 {
-    auto GL_context = static_cast<OpenGLContext*>(context);
+    auto GL_context = static_cast<OpenGLContext*>(context.get());
 
     const auto current_frame = static_cast<float>(glfwGetTime());
     GL_context->m_delta_time = current_frame - GL_context->m_last_frame_time;
@@ -43,29 +38,5 @@ float getDeltaTimeOpenGL(void* context)
 
     return GL_context->m_delta_time;
 }
-
-// OpenGLContext::OpenGLContext(void* window)
-//     : m_Window(static_cast<GLFWwindow*>(window)) {};
-
-// OpenGLContext::~OpenGLContext()
-// {
-//     fmt::print("OPENGL CONTEXT DESTROYED\n");
-//     glfwDestroyWindow(m_Window);
-// }
-
-// void OpenGLContext::initialize()
-// {
-//     glfwMakeContextCurrent(m_Window);
-//     const int statusGLAD = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-//     if (!statusGLAD) {
-//         glfwTerminate();
-//         exit(EXIT_FAILURE);
-//     }
-// }
-
-// void OpenGLContext::swapBuffers()
-// {
-//     glfwSwapBuffers(m_Window);
-// }
 
 }

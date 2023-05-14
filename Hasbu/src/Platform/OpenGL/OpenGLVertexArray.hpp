@@ -17,23 +17,10 @@ struct OpenGLVertexArray : public VertexArray {
     Shared<VertexBufferIndex> m_VBI;
 };
 
-void bindOpenGLVertexArray(void* vao);
+void bindOpenGLVertexArray(Shared<VertexArray>& vao);
 void unbindOpenGLVertexArray();
-void addVertexBufferOpenGLVertexArray(void* vao, void* vbo);
-void setOpenGLVertexBufferIndex(void* vao, Shared<VertexBufferIndex>& vio);
+void addVertexBufferOpenGLVertexArray(Shared<VertexArray>& vao, Shared<Hasbu::VertexBuffer>& vbo);
+void setOpenGLVertexBufferIndex(Shared<VertexArray>& vao, Shared<VertexBufferIndex>& vio);
 
-// class OpenGLVertexArray : public VertexArray {
-// public:
-//     OpenGLVertexArray();
-//     ~OpenGLVertexArray() = default;
-
-//     void bind() override;
-//     void unbind() override;
-//     // void addBuffer() override;
-
-// private:
-//     unsigned int m_IdVAO;
-//     std::vector<VertexBuffer> m_BuffersLayouts;
-// };
 
 }

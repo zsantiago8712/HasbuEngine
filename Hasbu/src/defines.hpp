@@ -2,6 +2,9 @@
 
 #include <memory>
 #include <utility>
+#include <string_view>
+#include <initializer_list>
+#include <vector>
 
 #define HB_API __attribute__((visibility("default")))
 #define HASBU_CONSTEXPR constexpr

@@ -16,9 +16,9 @@ OpenGLVertexArray::OpenGLVertexArray()
     glBindVertexArray(m_IdVAO);
 }
 
-void bindOpenGLVertexArray(void* vao)
+void bindOpenGLVertexArray(Shared<VertexArray>& vao)
 {
-    auto opengl_vao = static_cast<OpenGLVertexArray*>(vao);
+    auto opengl_vao = std::static_pointer_cast<OpenGLVertexArray>(vao);
     glBindVertexArray(opengl_vao->m_IdVAO);
 }
 
@@ -27,11 +27,11 @@ void unbindOpenGLVertexArray()
     glBindVertexArray(0);
 }
 
-void addVertexBufferOpenGLVertexArray(void* vao, void* vbo)
+void addVertexBufferOpenGLVertexArray(Shared<VertexArray>& vao, Shared<VertexBuffer>& vbo)
 {
     using enum BufferElementType;
-    auto opengl_vao = static_cast<OpenGLVertexArray*>(vao);
-    auto opengl_vbo = static_cast<OpenGLVertexBuffer*>(vbo);
+    auto opengl_vao = std::static_pointer_cast<OpenGLVertexArray>(vao);
+    auto opengl_vbo = std::static_pointer_cast<OpenGLVertexBuffer>(vbo);
 
     glBindVertexArray(opengl_vao->m_IdVAO);
     openGLVertexBufferBind(vbo);
@@ -55,13 +55,15 @@ void addVertexBufferOpenGLVertexArray(void* vao, void* vbo)
     opengl_vao->m_BuffersLayouts.emplace_back(opengl_vbo);
 }
 
-void setOpenGLVertexBufferIndex(void* vao, Shared<VertexBufferIndex>& vio)
+void setOpenGLVertexBufferIndex(Shared<VertexArray>& vao, Shared<VertexBufferIndex>& vio)
 {
-    auto opengl_vao = static_cast<OpenGLVertexArray*>(vao);
+    auto opengl_vao = std::static_pointer_cast<OpenGLVertexArray>(vao);
     glBindVertexArray(opengl_vao->m_IdVAO);
     bindVertexBufferIndex(vio);
     opengl_vao->m_VBI = vio;
 }
+
+
 static GLenum getGLType(BufferElementType type)
 {
     using enum BufferElementType;
@@ -85,14 +87,4 @@ static GLenum getGLType(BufferElementType type)
         return GL_FLOAT;
     }
 }
-
-// void OpenGLVertexArray::bind()
-// {
-//     glBindVertexArray(m_IdVAO);
-// }
-
-// void OpenGLVertexArray::unbind()
-// {
-//     glBindVertexArray(0);
-// }
 }

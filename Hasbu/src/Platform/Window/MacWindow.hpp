@@ -11,32 +11,18 @@ struct GLFWwindow;
 namespace Hasbu {
 
 struct MacWindow : public Window {
-    MacWindow() = default;
-    MacWindow(const WindowData& data);
+    explicit MacWindow(WindowData& data);
+
+    ~MacWindow() override;
 
     WindowData m_Data;
     GLFWwindow* m_NativeWindow;
 };
 
 void macWindowPollEvents();
-void macWindowUpdate(void* window);
-bool macWindowShouldClose(void* window);
-void macWindowSetTile(void* window, const std::string_view& title);
-float macWindowGetAspectRatio(void* window);
-
-float macWindowGetDeltaTime(void* window);
-
-// class MacWindow : public Window {
-// public:
-//     MacWindow(const WindowData& data);
-//     ~MacWindow();
-//     void update() override;
-//     bool shouldClose() override;
-
-// private:
-//     void initialized();
-
-//     GLFWwindow* m_NativeWindow;
-//     Shared<GraphicsContext> m_Context;
-// };
+void macWindowUpdate(Unique<Window>& window);
+bool macWindowShouldClose(Unique<Window>& window);
+void macWindowSetTile(Unique<Window>& window, const std::string_view& title);
+float macWindowGetAspectRatio(Unique<Window>& window);
+float macWindowGetDeltaTime(Unique<Window>& window);
 }

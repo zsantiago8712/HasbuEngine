@@ -1,5 +1,6 @@
 #pragma once
 #include "Render/VertexIndexBuffer.hpp"
+#include "defines.hpp"
 
 namespace Hasbu {
 
@@ -8,7 +9,7 @@ struct OpenGLVertexBufferIndex : public VertexBufferIndex {
     unsigned int m_IdVIO;
 };
 
-void binOpenGLVertexBufferIndex(void* vio);
+void binOpenGLVertexBufferIndex(Shared<VertexBufferIndex>& vio);
 void unbindOpenGLVertexBufferIndex();
 
 }

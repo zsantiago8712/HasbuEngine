@@ -16,5 +16,5 @@ private:
     Unique<Window> m_Window;
 };
 
-App* createApplication();
+Hasbu::Unique<Hasbu::App> createApplication();
 }

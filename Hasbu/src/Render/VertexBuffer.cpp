@@ -1,53 +1,68 @@
 #include "Render/VertexBuffer.hpp"
 #include "Platform/OpenGL/OpenGLVertexBuffer.hpp"
+#include "core/Configuration.hpp"
 #include "defines.hpp"
+#include <fmt/core.h>
 
-namespace Hasbu {
-
-using BindFn = void (*)(void* vbo);
+using BindFn = void (*)(Hasbu::Shared<Hasbu::VertexBuffer>& vbo);
 using UnbindFn = void (*)();
-using setLayoutFn = void (*)(void* vbo, const VertexBufferLayout& layout);
+using setLayoutFn = void (*)(Hasbu::Shared<Hasbu::VertexBuffer>& vbo, const Hasbu::VertexBufferLayout& layout);
 
 struct VertexBufferFunctions {
+
+    VertexBufferFunctions();
     BindFn bind;
     UnbindFn unbind;
     setLayoutFn setLayout;
 };
 
-static const VertexBufferFunctions vertexBufferFunctions[] = {
-    { openGLVertexBufferBind, openGLVertexBufferUnbind, openGLSetLayout }
-};
+static const VertexBufferFunctions vbo_functions;
+
+namespace Hasbu {
 
 Shared<VertexBuffer> createVertexBuffer(float* data, const unsigned int size)
 {
-#ifdef OpenGL
-    return createShared<OpenGLVertexBuffer>(data, size);
-#elif defined Vulkan
-    GraphicApi api = GraphicApi::VULKAN;
-#endif
+    auto& configs = HasbuConfig::Configurations::getInstance();
+    switch (configs.getGraphicsApi()) {
+    case HasbuConfig::GraphicApi::OPENGL:
+        return createShared<OpenGLVertexBuffer>(data, size);
+        break;
+    case HasbuConfig::GraphicApi::VULKAN:
+        fmt::print("Platfor is not available right now");
+        return nullptr;
+        break;
+    }
 }
 
 void bindVertexBuffer(Shared<VertexBuffer>& vbo)
 {
-    const auto& functions = vertexBufferFunctions[static_cast<int>(vbo->api)];
-    functions.bind(vbo.get());
+    vbo_functions.bind(vbo);
 }
 
 void unbindVertexBuffer(const Shared<VertexBuffer>& vbo)
 {
-    const auto& functions = vertexBufferFunctions[static_cast<int>(vbo->api)];
-    functions.unbind();
+    vbo_functions.unbind();
 }
 
 void setLayout(Shared<VertexBuffer>& vbo, const VertexBufferLayout& layout)
 {
-    const auto& functions = vertexBufferFunctions[static_cast<int>(vbo->api)];
-    functions.setLayout(vbo.get(), layout);
+    vbo_functions.setLayout(vbo, layout);
 }
 
-// Shared<VertexBuffer> VertexBuffer::create(void* data, const unsigned int size)
-// {
-//     return createShared<OpenGLVertexBuffer>(data, size);
-// }
+}
 
+VertexBufferFunctions::VertexBufferFunctions()
+{
+
+    auto& configs = HasbuConfig::Configurations::getInstance();
+    switch (configs.getGraphicsApi()) {
+    case HasbuConfig::GraphicApi::OPENGL:
+        this->bind = Hasbu::openGLVertexBufferBind;
+        this->unbind = Hasbu::openGLVertexBufferUnbind;
+        this->setLayout = Hasbu::openGLSetLayout;
+        break;
+    case HasbuConfig::GraphicApi::VULKAN:
+        fmt::print("Platfor is not available right now");
+        break;
+    }
 }

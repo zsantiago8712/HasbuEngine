@@ -16,7 +16,6 @@
 #include <cstddef>
 #include <fmt/core.h>
 #include <string>
-#include <string_view>
 
 namespace Hasbu {
 
@@ -59,7 +58,7 @@ void App::run(std::string_view const& vertex_shader_file,
         0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
         -0.5f, 0.5f, 0.5f, 0.0f, 0.0f
     };
-    
+
     unsigned int indices[] = {
         0, 1, 3,
         1, 2, 3,
@@ -170,7 +169,7 @@ void App::run(std::string_view const& vertex_shader_file,
         for (const auto& position : cubePositions) {
             float angle = 20.0f * i;
             la::mat4 model;
-            
+
             model = la::translate(model, position);
 
             if (i % 3 == 0) {

@@ -19,6 +19,9 @@ project "App"
         "glfw"
     }
 
+    pchsource "defines.cpp"
+    pchheader "defines.hpp"
+
     includedirs { "./", "../vendor", "../vendor/LA/src" }
     files { "Render/**.cpp", "Shader/**.cpp", "core/**.cpp",  "Platform/Window/**.cpp", "Platform/OpenGL/**.cpp" }
 

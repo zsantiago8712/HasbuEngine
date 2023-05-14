@@ -1,0 +1,11 @@
+{
+  "window": {
+    "width": 800,
+    "height": 600,
+    "name": "HasbuEngine"
+  },
+  "application": {
+    "version": 0.1,
+    "api_graphic": 0
+  }
+}

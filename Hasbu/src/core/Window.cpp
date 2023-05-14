@@ -1,19 +1,21 @@
 #include "core/Window.hpp"
+#include "Configuration.hpp"
 #include "Platform/Window/MacWindow.hpp"
+#include "Render/Render.hpp"
 #include "core/WindowData.hpp"
 #include "defines.hpp"
 #include <fmt/core.h>
-#include <functional>
-#include <string_view>
 
 using PollEventsFn = void (*)();
-using UpdateFn = void (*)(void* window);
-using ShouldCloseFn = bool (*)(void* window);
-using SetTileFn = void (*)(void* window, const std::string_view& new_title);
-using GetAspectRatio = float (*)(void* window);
-using GetDeltaTime = float (*)(void* window);
+using UpdateFn = void (*)(Hasbu::Unique<Hasbu::Window>& window);
+using ShouldCloseFn = bool (*)(Hasbu::Unique<Hasbu::Window>& window);
+using SetTileFn = void (*)(Hasbu::Unique<Hasbu::Window>& window, const std::string_view& new_title);
+using GetAspectRatio = float (*)(Hasbu::Unique<Hasbu::Window>& window);
+using GetDeltaTime = float (*)(Hasbu::Unique<Hasbu::Window>& window);
 
 struct WindowPlatformFunctions {
+
+    WindowPlatformFunctions();
     PollEventsFn pollEvents;
     UpdateFn update;
     ShouldCloseFn shouldClose;
@@ -24,54 +26,88 @@ struct WindowPlatformFunctions {
     // otras funciones específicas de la plataforma
 };
 
+static const WindowPlatformFunctions windowPlatformFunctions;
+
 namespace Hasbu {
 
-static const WindowPlatformFunctions windowPlatformFunctions[] = {
-    { macWindowPollEvents, macWindowUpdate, macWindowShouldClose,
-        macWindowSetTile, macWindowGetAspectRatio, macWindowGetDeltaTime }
+Window::~Window()
+{
+    fmt::print("Window destructor called\n");
 };
 
 Unique<Window>
 createWindow(const unsigned int width, const unsigned int height, const std::string_view& name)
 {
+    auto& configs = HasbuConfig::Configurations::getInstance();
     WindowData attr { width, height, name };
-    return createUnique<MacWindow>(attr);
+
+    switch (configs.getPlatform()) {
+    case HasbuConfig::Platform::MACOS:
+        return createUnique<MacWindow>(attr);
+        break;
+
+    case HasbuConfig::Platform::WINDOWS:
+        fmt::print("Platfor is not available right now");
+        return nullptr;
+        break;
+
+    case HasbuConfig::Platform::LINUX:
+        fmt::print("Platfor is not available right now");
+        return nullptr;
+        break;
+    }
 }
 
 void windowPollEvents(Unique<Window>& window)
 {
-    const auto& functions = windowPlatformFunctions[static_cast<int>(window->platform)];
-    functions.pollEvents();
+    windowPlatformFunctions.pollEvents();
 }
 
 void windowUpdate(Unique<Window>& window)
 {
-    const auto& functions = windowPlatformFunctions[static_cast<int>(window->platform)];
-    functions.update(window.get());
+    windowPlatformFunctions.update(window);
 }
 
 bool windowShouldClose(Unique<Window>& window)
 {
-    const auto& functions = windowPlatformFunctions[static_cast<int>(window->platform)];
-    return functions.shouldClose(window.get());
+    return windowPlatformFunctions.shouldClose(window);
 }
 
 void windowSetTitle(Unique<Window>& window, const std::string_view& title)
 {
-    const auto& functions = windowPlatformFunctions[static_cast<int>(window->platform)];
-    functions.setTile(window.get(), title);
+    windowPlatformFunctions.setTile(window, title);
 }
 
 float windowGetAspectRatio(Unique<Window>& window)
 {
-    const auto& functions = windowPlatformFunctions[static_cast<int>(window->platform)];
-    return functions.getAspectRatio(window.get());
+    return windowPlatformFunctions.getAspectRatio(window);
 }
 
 float windowGetDeltaTime(Unique<Window>& window)
 {
-    const auto& functions = windowPlatformFunctions[static_cast<int>(window->platform)];
-    return functions.getDeltaTime(window.get());
+    return windowPlatformFunctions.getDeltaTime(window);
 }
 
+}
+
+WindowPlatformFunctions::WindowPlatformFunctions()
+{
+    auto& configs = HasbuConfig::Configurations::getInstance();
+
+    switch (configs.getPlatform()) {
+    case HasbuConfig::Platform::MACOS:
+        this->pollEvents = Hasbu::macWindowPollEvents;
+        this->getDeltaTime = Hasbu::macWindowGetDeltaTime;
+        this->getAspectRatio = Hasbu::macWindowGetAspectRatio;
+        this->setTile = Hasbu::macWindowSetTile;
+        this->shouldClose = Hasbu::macWindowShouldClose;
+        this->update = Hasbu::macWindowUpdate;
+        break;
+    case HasbuConfig::Platform::LINUX:
+        fmt::print("Platfor is not available right now");
+        break;
+    case HasbuConfig::Platform::WINDOWS:
+        fmt::print("Platfor is not available right now");
+        break;
+    }
 }
