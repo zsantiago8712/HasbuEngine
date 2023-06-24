@@ -1,0 +1,1 @@
+target_sources(HasbuLib PUBLIC DynamicAllocator.cpp Logger.cpp offsetAllocator.cpp FileManager.cpp)

@@ -38,3 +38,6 @@
 
 compile_commands.json
 MakeFile
+/build
+/build_debug_opengl
+/Logs
