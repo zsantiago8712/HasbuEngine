@@ -3,7 +3,7 @@
 int main()
 {
 
-    Hasbu::Application& app = Hasbu::Application::createApplication();
+    Hasbu::Core::Application& app = Hasbu::Core::Application::createApplication();
 
     app.start();
 

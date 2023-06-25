@@ -1,14 +1,12 @@
 #pragma once
-#include "Utilities/DynamicAllocator.hpp"
 #include "Renderer/Vertex.hpp"
+#include "Utilities/DynamicAllocator.hpp"
 
-namespace HasbuAPIContext {
-
+namespace Hasbu::ApiContext {
 struct VertexArrayData;
+}
 
-
-
-
+namespace Hasbu::Render {
 
 enum class VertexAttrib {
     POSITIONS = 0,
@@ -16,19 +14,13 @@ enum class VertexAttrib {
     NORMALS = 2,
 };
 
-
-
 struct VertexArray {
 
-    HasbuUtils::Shared<VertexArrayData> data;
+    Utils::Shared<ApiContext::VertexArrayData> data;
 
-    void create(const std::span<HasbuRender::Vertex> vertices, const std::span<unsigned int> indices);
-
-    void bind();
-    void unBindVertexArray();
+    void create(const std::span<Vertex> vertices, const std::span<unsigned int> indices);
+    void bind() const;
+    void unBindVertexArray() const;
     void attribPointer(VertexAttrib attrib, const std::size_t& size = 3);
-
 };
-
-
 }

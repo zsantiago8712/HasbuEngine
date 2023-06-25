@@ -1,6 +1,6 @@
 #include <spdlog/logger.h>
 
-namespace HasbuUtils {
+namespace Hasbu::Utils {
 
 class Logger {
 
@@ -18,21 +18,21 @@ private:
 
 #ifdef DEBUG
 
-#define HASBU_TRACE(...) HasbuUtils::Logger::getLogger()->trace(__VA_ARGS__)
-#define HASBU_DEBUG(...) HasbuUtils::Logger::getLogger()->debug(__VA_ARGS__)
-#define HASBU_INFO(...) HasbuUtils::Logger::getLogger()->info(__VA_ARGS__)
-#define HASBU_WARNING(...) HasbuUtils::Logger::getLogger()->warn(__VA_ARGS__)
-#define HASBU_ERROR(...) HasbuUtils::Logger::getLogger()->error(__VA_ARGS__)
-#define HASBU_FATAL(...) HasbuUtils::Logger::getLogger()->critical(__VA_ARGS__)
+#define HASBU_TRACE(...) Hasbu::Utils::Logger::getLogger()->trace(__VA_ARGS__)
+#define HASBU_DEBUG(...) Hasbu::Utils::Logger::getLogger()->debug(__VA_ARGS__)
+#define HASBU_INFO(...) Hasbu::Utils::Logger::getLogger()->info(__VA_ARGS__)
+#define HASBU_WARNING(...) Hasbu::Utils::Logger::getLogger()->warn(__VA_ARGS__)
+#define HASBU_ERROR(...) Hasbu::Utils::Logger::getLogger()->error(__VA_ARGS__)
+#define HASBU_FATAL(...) Hasbu::Utils::Logger::getLogger()->critical(__VA_ARGS__)
 
 #elif defined(RELEASE)
 
 #define HASBU_TRACE(...)
 #define HASBU_DEBUG(...)
-#define HASBU_INFO(...) HasbuUtils::Logger::getLogger()->info(__VA_ARGS__)
-#define HASBU_WARNING(...) HasbuUtils::Logger::getLogger()->warn(__VA_ARGS__)
-#define HASBU_ERROR(...) HasbuUtils::Logger::getLogger()->error(__VA_ARGS__)
-#define HASBU_FATAL(...) HasbuUtils::Logger::getLogger()->critical(__VA_ARGS__)
+#define HASBU_INFO(...) Hasbu::Utils::Logger::getLogger()->info(__VA_ARGS__)
+#define HASBU_WARNING(...) Hasbu::Utils::Logger::getLogger()->warn(__VA_ARGS__)
+#define HASBU_ERROR(...) Hasbu::Utils::Logger::getLogger()->error(__VA_ARGS__)
+#define HASBU_FATAL(...) Hasbu::Utils::Logger::getLogger()->critical(__VA_ARGS__)
 
 #endif
 

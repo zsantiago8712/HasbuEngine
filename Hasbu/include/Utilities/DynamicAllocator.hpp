@@ -6,7 +6,7 @@
 #define TO_MEGABYTES(amount) ((amount)*1024ULL * 1024ULL)
 #define TO_KILOBYTES(amount) ((amount)*1024ULL)
 
-namespace HasbuUtils {
+namespace Hasbu::Utils {
 
 class DynamicAllocator {
 
@@ -43,7 +43,7 @@ private:
 
     void* block = nullptr;
     std::size_t size = 0;
-    std::size_t free_storage = 0;
+    std::size_t freeStorage = 0;
     std::list<OffsetAllocator::Allocation> allocations;
     OffsetAllocator::Allocator offset_allocator;
 };
@@ -65,12 +65,12 @@ struct AllocatorAdapter {
 
     HASBU_CONSTEXPR pointer allocate(const size& _size)
     {
-        return HasbuUtils::DynamicAllocator::allocate<Type>(_size);
+        return DynamicAllocator::allocate<Type>(_size);
     }
 
     HASBU_CONSTEXPR void deallocate(pointer _pointer, const size& _size) const
     {
-        HasbuUtils::DynamicAllocator::deallocate(_pointer, _size);
+        DynamicAllocator::deallocate(_pointer, _size);
     }
 };
 
@@ -91,12 +91,12 @@ struct AllocatorAdapterMaps {
 
     HASBU_CONSTEXPR pointer allocate(const size& _size)
     {
-        return static_cast<pointer>(HasbuUtils::DynamicAllocator::allocate<Type>(_size));
+        return static_cast<pointer>(DynamicAllocator::allocate<Type>(_size));
     }
 
     HASBU_CONSTEXPR void deallocate(pointer _pointer, const size& _size) const
     {
-        HasbuUtils::DynamicAllocator::deallocate(_pointer, _size);
+        DynamicAllocator::deallocate(_pointer, _size);
     }
 };
 
@@ -119,21 +119,34 @@ template <class Type, class... Args>
 HASBU_CONSTEXPR Unique<Type> createUnique(Args&... args)
 {
     return Unique<Type>(new (DynamicAllocator::allocate<Type>()) Type(std::forward<Args>(args)...), [](Type* ptr) {
-        DynamicAllocator::deallocate(ptr);
-        ptr->~Type();
+        if (ptr != nullptr) {
+            DynamicAllocator::deallocate(ptr);
+            ptr->~Type();
+        }
     });
 }
 
 template <class Type>
-using Vector = std::vector<Type, HasbuUtils::AllocatorAdapter<Type>>;
+HASBU_CONSTEXPR Unique<Type> createUnique(std::nullptr_t)
+{
+    return Unique<Type>(nullptr, [](Type* ptr) {
+        if (ptr != nullptr) {
+            DynamicAllocator::deallocate(ptr);
+            ptr->~Type();
+        }
+    });
+}
+
+template <class Type>
+using Vector = std::vector<Type, AllocatorAdapter<Type>>;
 
 template <class Type, class TypeCompare = std::less<Type>>
-using set = std::set<Type, std::less<Type>, HasbuUtils::AllocatorAdapter<Type>>;
+using set = std::set<Type, std::less<Type>, AllocatorAdapter<Type>>;
 
 template <class TypeKey, class TypeValue>
-using AllocatorAdapterMap = HasbuUtils::AllocatorAdapterMaps<std::pair<const TypeKey, TypeValue>>;
+using AllocatorAdapterMap = AllocatorAdapterMaps<std::pair<const TypeKey, TypeValue>>;
 
 template <class TypeKey, class TypeValue, class TypeCompare = std::less<TypeKey>>
-using multimap = std::map<TypeKey, TypeValue, TypeCompare, HasbuUtils::AllocatorAdapterMap<TypeKey, TypeValue>>;
+using multimap = std::map<TypeKey, TypeValue, TypeCompare, AllocatorAdapterMap<TypeKey, TypeValue>>;
 
 }

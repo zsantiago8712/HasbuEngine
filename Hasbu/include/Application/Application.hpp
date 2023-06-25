@@ -1,8 +1,9 @@
 #pragma once
+#include "Application/Window.hpp"
+#include "Renderer/Render.hpp"
 #include "Utilities/DynamicAllocator.hpp"
-#include "Window.hpp"
 
-namespace Hasbu {
+namespace Hasbu::Core {
 
 class Application {
 public:
@@ -23,7 +24,8 @@ public:
 private:
     Application() = default;
     ~Application();
-    HasbuUtils::Unique<Window> window = HasbuUtils::createUnique<Window>();
+    Utils::Unique<Window> m_window = Utils::createUnique<Window>();
+    Utils::Unique<Render::Renderer> m_renderer = Utils::createUnique<Render::Renderer>();
 };
 
 }

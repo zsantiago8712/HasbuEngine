@@ -1,71 +1,90 @@
 #include "Application/Window.hpp"
-#include "Application/EventDispatcher.hpp"
-#include "Application/WindowData.hpp"
-#include "KeyCodes.hpp"
-#include "Renderer/Camera.hpp"
-#include "Renderer/Context.hpp"
+#include "DynamicAllocator.hpp"
+#include "EventDispatcher.hpp"
 #include "Utilities/Logger.hpp"
+#include "WindowData.hpp"
 #include <GLFW/glfw3.h>
-namespace Hasbu {
+
+static void initializedGLFW();
+namespace Hasbu::Core {
 
 Window::Window(const unsigned int width, const unsigned int height)
-    : data(WindowData(width, height))
 {
-    this->native_window = HasbuRender::getNativeWindow(*this->data.context);
-}
+    initializedGLFW();
+    m_data = Utils::createUnique<WindowData>(width, height);
+
+    glfwSetCursorPosCallback(this->m_data->m_window, []([[maybe_unused]] GLFWwindow* window, const double xpos, const double ypos) {
+        HASBU_DEBUG("Curosr Postion: [X: {}, Y: {}]", xpos, ypos);
+        EventDispatcher::dispatchMousEvent(MouseEvent::CURSOR, xpos, ypos);
+    });
+};
 
 Window::Window()
-    : data(WindowData())
 {
-    this->native_window = HasbuRender::getNativeWindow(*this->data.context);
+    initializedGLFW();
+    m_data = Utils::createUnique<WindowData>();
 
-    glfwSetKeyCallback(this->native_window, []([[maybe_unused]] GLFWwindow* window, [[maybe_unused]] int key, [[maybe_unused]] int scancode, [[maybe_unused]] int action, [[maybe_unused]] int mods) {
-        const char* keyname = glfwGetKeyName(key, scancode);
-        if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-            HASBU_DEBUG("KEY {} IS HAS BEEN PRESSED", (keyname != nullptr) ? keyname : "");
-            // const Hasbu::Event event = Hasbu::getEvent(static_cast<Hasbu::KeyCode>(key));
-            // EventDispatcher::dispatchKeyEvent(event);
-        } else {
-            HASBU_DEBUG("KEY {} IS HAS BEEN RELEASED", (keyname != nullptr) ? keyname : "");
-        }
+    glfwSetCursorPosCallback(this->m_data->m_window, []([[maybe_unused]] GLFWwindow* window, const double xpos, const double ypos) {
+        HASBU_DEBUG("Curosr Postion: [X: {}, Y: {}]", xpos, ypos);
+        EventDispatcher::dispatchMousEvent(MouseEvent::CURSOR, xpos, ypos);
     });
+
+    // TODO: make a better keyclalback
+    //  glfwSetKeyCallback(this->native_window, []([[maybe_unused]] GLFWwindow* window, [[maybe_unused]] int key, [[maybe_unused]] int scancode, [[maybe_unused]] int action, [[maybe_unused]] int mods) {
+    //      const char* keyname = glfwGetKeyName(key, scancode);
+    //      if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+    //          HASBU_DEBUG("KEY {} IS HAS BEEN PRESSED", (keyname != nullptr) ? keyname : "");
+    //          // const Hasbu::Event event = Hasbu::getEvent(static_cast<Hasbu::KeyCode>(key));
+    //          // EventDispatcher::dispatchKeyEvent(event);
+    //      } else {
+    //          HASBU_DEBUG("KEY {} IS HAS BEEN RELEASED", (keyname != nullptr) ? keyname : "");
+    //      }
+    //  });
+}
+
+void Window::update()
+{
+    glfwSwapBuffers(m_data->m_window);
+}
+
+// TODO: manejar los callbacks (inputs, tamaño, etc)
+void Window::processInput(const double deltaTime) const
+{
+    const std::string FPS = std::to_string(1 / deltaTime);
+    const std::string ms = std::to_string(deltaTime * 1000);
+    const std::string newTitle = FPS + " FPS / " + ms + " ms";
+#ifdef DEBUG
+    glfwSetWindowTitle(m_data->m_window, newTitle.data());
+#endif
+    glfwPollEvents();
+}
+
+bool Window::shouldClose() const
+{
+    return !glfwWindowShouldClose(m_data->m_window);
 }
 
 void Window::close()
 {
-    glfwSetWindowShouldClose(this->native_window, GLFW_TRUE);
-}
-
-void windowUpdate(GLFWwindow* native_window)
-{
-
-    double time_diff = HasbuRender::Camera::getDeltaTime();
-    static double counter = 0;
-    counter++;
-    if (time_diff >= (1.0 / 60.0)) {
-        const std::string FPS = std::to_string((1.0 / time_diff) * counter);
-        const std::string ms = std::to_string((time_diff / counter) * 1000);
-        const std::string newTitle = FPS + " FPS / " + ms + " ms";
-        glfwSetWindowTitle(native_window, newTitle.data());
-        counter = 0;
-    }
-    HasbuRender::swapBuffers(native_window);
-}
-
-// TODO: manejar los callbacks (inputs, tamaño, etc)
-void processInput(void)
-{
-    glfwPollEvents();
+    glfwSetWindowShouldClose(m_data->m_window, GLFW_TRUE);
 }
 
 double getTime()
 {
     return glfwGetTime();
 }
-
-bool shouldClose(GLFWwindow* native_window)
-{
-    return !glfwWindowShouldClose(native_window);
 }
 
+// TODO: implement a better way to use the versioning
+static void initializedGLFW()
+{
+    static constexpr unsigned int OPENGL_MAJOR_VERSION = 4;
+    static constexpr unsigned int OPENGL_MINOR_VERSION = 1;
+
+    HASBU_ASSERT(!glfwInit(), "GLFW failed to initilized")
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, OPENGL_MAJOR_VERSION);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OPENGL_MINOR_VERSION);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 }

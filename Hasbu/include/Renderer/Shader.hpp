@@ -3,11 +3,11 @@
 #include "Utilities/DynamicAllocator.hpp"
 #include <string_view>
 
-namespace HasbuAPIContext {
+namespace Hasbu::ApiContext {
 struct ShaderDataApi;
 }
 
-namespace HasbuRender {
+namespace Hasbu::Render {
 
 struct Shader {
 
@@ -17,11 +17,10 @@ struct Shader {
     void create(const std::string_view& vs_file, const std::string_view& fs_file);
     void bind() const;
     void unBind() const;
+    void setInt(const std::string_view& uniform_name, const int data) const;
+    void setM4f(const std::string_view& uniform_name, const float* data) const;
 
-    HasbuUtils::Shared<HasbuAPIContext::ShaderDataApi> data;
-
-    void setInt(const std::string_view& uniform_name, const int& data);
-    void setM4f(const std::string_view& uniform_name, const float* data);
+    Utils::Shared<ApiContext::ShaderDataApi> m_data;
 };
 
 }

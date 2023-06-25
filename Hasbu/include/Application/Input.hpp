@@ -2,9 +2,8 @@
 #pragma once
 #include "Application/KeyCodes.hpp"
 
-namespace Hasbu {
+namespace Hasbu::Core {
 
 bool isKeyBeenPressed(KeyCode key);
 
-bool isKeyBeenRelased(KeyCode key);
 }

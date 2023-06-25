@@ -1,23 +1,26 @@
 #include "Renderer/Texture.hpp"
 #include "Utilities/FileManager.hpp"
+#include "Utilities/Logger.hpp"
 #include <GL/glew.h>
 
-namespace HasbuAPIContext {
+static int getTextureType(const int image_nr_chanels);
+
+namespace Hasbu::ApiContex {
 
 struct TextureData {
     unsigned int id;
-    HasbuRender::TextureType type;
+    Render::TextureType type;
 };
 
 }
 
-namespace HasbuRender {
+namespace Hasbu::Render {
 
 Texture::Texture()
-    : data(HasbuUtils::createShared<HasbuAPIContext::TextureData>()) {};
+    : data(Utils::createShared<ApiContex::TextureData>()) {};
 
 Texture::Texture(const std::string_view& file_name)
-    : data(HasbuUtils::createShared<HasbuAPIContext::TextureData>())
+    : data(Utils::createShared<ApiContex::TextureData>())
 {
     this->create(file_name);
 }
@@ -40,11 +43,11 @@ void Texture::create(const std::string_view& file_name)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, nr_channels;
-    unsigned char* texture_data = HasbuUtils::loadTexture(file_name.data(), width, height, nr_channels);
+    unsigned char* texture_data = Utils::loadTexture(file_name.data(), width, height, nr_channels);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, HasbuUtils::getTextureType(nr_channels), GL_UNSIGNED_BYTE, texture_data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, getTextureType(nr_channels), GL_UNSIGNED_BYTE, texture_data);
     glGenerateMipmap(GL_TEXTURE_2D);
-    HasbuUtils::freeTexture(texture_data);
+    Utils::freeTexture(texture_data);
 }
 
 void Texture::bind(const int& num) const
@@ -58,4 +61,20 @@ void Texture::unbind()
     glActiveTexture(GL_TEXTURE0);
 }
 
+}
+
+// TODO: change this functions to TextureOpenGL.cpp
+static int getTextureType(const int image_nr_chanels)
+{
+    switch (image_nr_chanels) {
+    case 1:
+        return GL_RED;
+    case 3:
+        return GL_RGB;
+    case 4:
+        return GL_RGBA;
+    default:
+        HASBU_FATAL("INvalid NR channels {} \n", image_nr_chanels);
+        return -1;
+    }
 }

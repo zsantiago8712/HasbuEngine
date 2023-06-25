@@ -4,7 +4,10 @@ if(${CMAKE_VERSION} VERSION_LESS 3.12)
     cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
 endif()
 
+set(CMAKE_OSX_ARCHITECTURES "arm64")
+
 include(${CMAKE_SOURCE_DIR}/config.cmake)
+
 
 project(HasbuEngine VERSION 0.1
     DESCRIPTION "A game engine"

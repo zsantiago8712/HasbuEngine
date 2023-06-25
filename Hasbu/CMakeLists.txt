@@ -4,6 +4,9 @@ include(${CMAKE_SOURCE_DIR}/config.cmake)
 # Create the HasbuLib library
 add_library(HasbuLib STATIC)
 
+option(USE_OPENGL "Use OpenGL" ON)
+option(USE_VULKAN "Use Vulkan" OFF)
+
 # Add subdirectories
 add_subdirectory(src/API)
 add_subdirectory(src/Application)

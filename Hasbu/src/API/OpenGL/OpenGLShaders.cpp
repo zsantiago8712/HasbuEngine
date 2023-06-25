@@ -4,19 +4,14 @@
 #include <GL/glew.h>
 #include <string_view>
 
-static void compileShader(const unsigned int& id);
-static void linkProgram(const unsigned int& id_program);
+static void compileShader(const unsigned int id);
+static void linkProgram(const unsigned int id_program);
 
-namespace HasbuAPIContext {
+namespace Hasbu::ApiContext {
 
 struct ShaderDataApi {
     unsigned int id;
 };
-
-unsigned int creataProgram(void)
-{
-    return glCreateProgram();
-}
 
 void createShader(unsigned int& id_program, const std::string_view& vs_file, const std::string_view& fs_file)
 {
@@ -24,8 +19,8 @@ void createShader(unsigned int& id_program, const std::string_view& vs_file, con
     const unsigned int vs_id = glCreateShader(GL_VERTEX_SHADER);
     const unsigned int fs_id = glCreateShader(GL_FRAGMENT_SHADER);
 
-    const auto vs_data = HasbuUtils::loadShader(vs_file);
-    const auto fs_data = HasbuUtils::loadShader(fs_file);
+    const auto vs_data = Utils::loadShader(vs_file);
+    const auto fs_data = Utils::loadShader(fs_file);
 
     const char* c_vs_data = vs_data.c_str();
     const char* c_fs_data = fs_data.c_str();
@@ -46,19 +41,9 @@ void createShader(unsigned int& id_program, const std::string_view& vs_file, con
     glDeleteShader(fs_id);
 }
 
-void bindProgram(const unsigned int& id_program)
-{
-    glUseProgram(id_program);
 }
 
-void unBindProgram(void)
-{
-    glUseProgram(0);
-}
-
-}
-
-static void compileShader(const unsigned int& id)
+static void compileShader(const unsigned int id)
 {
     int succes;
 
@@ -75,7 +60,7 @@ static void compileShader(const unsigned int& id)
     HASBU_INFO("Shader {} compile succesfuly", id);
 }
 
-static void linkProgram(const unsigned int& id_program)
+static void linkProgram(const unsigned int id_program)
 {
     int succes;
     glLinkProgram(id_program);
@@ -92,43 +77,41 @@ static void linkProgram(const unsigned int& id_program)
     HASBU_INFO("Program {} linked succesfuly", id_program);
 }
 
-namespace HasbuRender {
+namespace Hasbu::Render {
 
 Shader::Shader()
 {
-    this->data = HasbuUtils::createShared<HasbuAPIContext::ShaderDataApi>();
+    this->m_data = Utils::createShared<ApiContext::ShaderDataApi>();
 }
 
 void Shader::create(const std::string_view& vs_file, const std::string_view& fs_file)
 {
-    HasbuAPIContext::createShader(this->data->id, vs_file, fs_file);
+    ApiContext::createShader(this->m_data->id, vs_file, fs_file);
 }
 
 void Shader::bind() const
 {
-    glUseProgram(this->data->id);
-    // HasbuAPIContext::bindProgram(this->data->id);
+    glUseProgram(this->m_data->id);
 }
 
 void Shader::unBind() const
 {
-    HasbuAPIContext::unBindProgram();
+    glUseProgram(0);
 }
 
 Shader::~Shader()
 {
-    this->data.reset();
+    this->m_data.reset();
 }
 
-void Shader::setInt(const std::string_view& uniform_name, const int& data)
+void Shader::setInt(const std::string_view& uniform_name, const int data) const
 {
-    auto x = glGetUniformLocation(this->data->id, uniform_name.data());
-    glUniform1i(x, data);
+    glUniform1i(glGetUniformLocation(this->m_data->id, uniform_name.data()), data);
 }
 
-void Shader::setM4f(const std::string_view& uniform_name, const float* data)
+void Shader::setM4f(const std::string_view& uniform_name, const float* data) const
 {
-    glUniformMatrix4fv(glGetUniformLocation(this->data->id, uniform_name.data()), 1, GL_FALSE, data);
+    glUniformMatrix4fv(glGetUniformLocation(this->m_data->id, uniform_name.data()), 1, GL_FALSE, data);
 }
 
 }

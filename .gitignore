@@ -36,6 +36,8 @@
 
 *.make
 
+*.DS_Store
+
 compile_commands.json
 MakeFile
 /build

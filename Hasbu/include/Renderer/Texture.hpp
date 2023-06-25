@@ -1,13 +1,12 @@
 #pragma once
 #include "DynamicAllocator.hpp"
-#include "defines.hpp"
 #include <string_view>
 
-namespace HasbuAPIContext {
+namespace Hasbu::ApiContex {
 struct TextureData;
 }
 
-namespace HasbuRender {
+namespace Hasbu::Render {
 
 enum class TextureType : unsigned int {
     DIFUSE = 1,
@@ -16,14 +15,14 @@ enum class TextureType : unsigned int {
 
 struct Texture {
     Texture();
-    Texture(const std::string_view& file_name);
+    explicit Texture(const std::string_view& file_name);
     ~Texture();
 
     void create(const std::string_view& file_name);
     void bind(const int& num) const;
     static void unbind();
 
-    HasbuUtils::Shared<HasbuAPIContext::TextureData> data;
+    Utils::Shared<ApiContex::TextureData> data;
 };
 
 }

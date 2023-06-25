@@ -3,31 +3,39 @@
 #include "Application/KeyCodes.hpp"
 #include "Renderer/Camera.hpp"
 
-namespace Hasbu {
+namespace Hasbu::Core {
 
 std::array<EventDispatcher::EventKeyFn, 3> EventDispatcher::key_events_functions;
 std::array<EventDispatcher::EventMouseFn, 2> EventDispatcher::mouse_events_functions;
 
-EventDispatcher::EventDispatcher(HasbuRender::Camera& camera)
+EventDispatcher::EventDispatcher(Render::Camera& camera)
 {
 
-    auto& app = Application::getInstace();
-    EventDispatcher::key_events_functions = {
-        [&camera]() {
-            camera.proccesKeyBoard();
+    EventDispatcher::mouse_events_functions = {
+
+        [&camera](const double xpos, const double ypos) {
+            camera.proccesMouseInput(xpos, ypos);
         },
 
-        [&camera]() {
-            camera.proccesKeyBoard();
-        },
-        // [&app](const int& key) {
-        //     app.proccesInput(key);
-        // },
-
-        [&app]() {
-            app.proccesInput();
-        }
     };
+
+    // auto& app = Application::getInstace();
+    // EventDispatcher::key_events_functions = {
+    //     [&camera]() {
+    //         camera.proccesKeyBoard();
+    //     },
+
+    //     [&camera]() {
+    //         camera.proccesKeyBoard();
+    //     },
+    //     // [&app](const int& key) {
+    //     //     app.proccesInput(key);
+    //     // },
+
+    //     [&app]() {
+    //         app.proccesInput();
+    //     }
+    // };
 }
 
 void EventDispatcher::dispatchKeyEvent(Event event)
@@ -37,7 +45,7 @@ void EventDispatcher::dispatchKeyEvent(Event event)
     }
 }
 
-void EventDispatcher::dispatchMousEvent(MouseEvent event, const double xpos, const double& ypos)
+void EventDispatcher::dispatchMousEvent(MouseEvent event, const double xpos, const double ypos)
 {
     EventDispatcher::mouse_events_functions[static_cast<unsigned int>(event)](xpos, ypos);
 }

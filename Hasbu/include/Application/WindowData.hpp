@@ -1,22 +1,20 @@
 #pragma once
-#include "Utilities/DynamicAllocator.hpp"
+#include <string_view>
 
-namespace HasbuAPIContext {
-struct Context;
-}
+struct GLFWwindow;
 
-namespace Hasbu {
+namespace Hasbu::Core {
 
 struct WindowData {
 
     explicit WindowData(const unsigned int height, const unsigned int width);
-    WindowData();
+    explicit WindowData();
     ~WindowData();
 
-    unsigned int width = 800;
-    unsigned int height = 900;
-    const std::string_view name = "Hasbu Engine";
-    HasbuUtils::Unique<HasbuAPIContext::Context> context;
+    unsigned int m_width = 800;
+    unsigned int m_height = 900;
+    const std::string_view m_name = "Hasbu Engine";
+    GLFWwindow* m_window;
 };
 
 }

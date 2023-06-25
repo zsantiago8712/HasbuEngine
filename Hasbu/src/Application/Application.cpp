@@ -1,19 +1,17 @@
 #include "Application/Application.hpp"
-// #include "LA/la.hpp"
-// #include "Mesh.hpp"
-// #include "OpenGL/VertexArray.hpp"
 #include "API/VertexArray.hpp"
+#include "Application/EventDispatcher.hpp"
 #include "Application/Input.hpp"
-#include "EventDispatcher.hpp"
+
 #include "KeyCodes.hpp"
 #include "Renderer/Camera.hpp"
-#include "Renderer/Context.hpp"
+#include "Renderer/Render.hpp"
 #include "Renderer/Shader.hpp"
 #include "Renderer/Texture.hpp"
 #include "Utilities/Logger.hpp"
 #include <GL/glew.h>
 
-namespace Hasbu {
+namespace Hasbu::Core {
 
 Application& Application::getInstace()
 {
@@ -23,17 +21,17 @@ Application& Application::getInstace()
 
 void* Application::getNativeWindow()
 {
-    return getInstace().window->native_window;
+    return getInstace().m_window->m_data->m_window;
 }
 
 Application& Application::createApplication(void)
 {
-    HasbuUtils::Logger::initLogger();
-    HasbuUtils::DynamicAllocator::initDynamicAllocator(TO_GYGABYTES(1));
-    HasbuUtils::DynamicAllocator::getReport();
+    Utils::Logger::initLogger();
+    Utils::DynamicAllocator::initDynamicAllocator(TO_GYGABYTES(1));
+    Utils::DynamicAllocator::getReport();
 
     HASBU_INFO("Application created correctly");
-    HasbuUtils::DynamicAllocator::getReport();
+    Utils::DynamicAllocator::getReport();
 
     return Application::getInstace();
 }
@@ -46,8 +44,8 @@ void Application::start()
 void Application::run()
 {
 
-    HasbuRender::Camera camera;
-    Hasbu::EventDispatcher event_dispatcher(camera);
+    Render::Camera camera;
+    EventDispatcher event_dispatcher(camera);
 
     la::vec3 cubePositions[] = {
         la::vec3(0.0f, 0.0f, 0.0f),
@@ -62,42 +60,42 @@ void Application::run()
         la::vec3(-1.3f, 1.0f, -1.5f)
     };
 
-    std::array<HasbuRender::Vertex, 24> _vertices {
+    std::array<Render::Vertex, 24> _vertices {
         // Front Face
-        HasbuRender::Vertex { .position { -0.5f, -0.5f, -0.5f }, .text_coords { 0.0f, 0.0f } },
-        HasbuRender::Vertex { .position { 0.5f, -0.5f, -0.5f }, .text_coords { 1.0f, 0.0f } },
-        HasbuRender::Vertex { .position { 0.5f, 0.5f, -0.5f }, .text_coords { 1.0f, 1.0f } },
-        HasbuRender::Vertex { .position { -0.5f, 0.5f, -0.5f }, .text_coords { 0.0f, 1.0f } },
+        Render::Vertex { .m_position { -0.5f, -0.5f, -0.5f }, .m_textCoords { 0.0f, 0.0f } },
+        Render::Vertex { .m_position { 0.5f, -0.5f, -0.5f }, .m_textCoords { 1.0f, 0.0f } },
+        Render::Vertex { .m_position { 0.5f, 0.5f, -0.5f }, .m_textCoords { 1.0f, 1.0f } },
+        Render::Vertex { .m_position { -0.5f, 0.5f, -0.5f }, .m_textCoords { 0.0f, 1.0f } },
 
         // Back Face
-        HasbuRender::Vertex { .position { -0.5f, -0.5f, 0.5f }, .text_coords { 0.0f, 0.0f } },
-        HasbuRender::Vertex { .position { 0.5f, -0.5f, 0.5f }, .text_coords { 1.0f, 0.0f } },
-        HasbuRender::Vertex { .position { 0.5f, 0.5f, 0.5f }, .text_coords { 1.0f, 1.0f } },
-        HasbuRender::Vertex { .position { -0.5f, 0.5f, 0.5f }, .text_coords { 0.0f, 1.0f } },
+        Render::Vertex { .m_position { -0.5f, -0.5f, 0.5f }, .m_textCoords { 0.0f, 0.0f } },
+        Render::Vertex { .m_position { 0.5f, -0.5f, 0.5f }, .m_textCoords { 1.0f, 0.0f } },
+        Render::Vertex { .m_position { 0.5f, 0.5f, 0.5f }, .m_textCoords { 1.0f, 1.0f } },
+        Render::Vertex { .m_position { -0.5f, 0.5f, 0.5f }, .m_textCoords { 0.0f, 1.0f } },
 
         // Top Face
-        HasbuRender::Vertex { .position { -0.5f, 0.5f, -0.5f }, .text_coords { 0.0f, 0.0f } },
-        HasbuRender::Vertex { .position { 0.5f, 0.5f, -0.5f }, .text_coords { 1.0f, 0.0f } },
-        HasbuRender::Vertex { .position { 0.5f, 0.5f, 0.5f }, .text_coords { 1.0f, 1.0f } },
-        HasbuRender::Vertex { .position { -0.5f, 0.5f, 0.5f }, .text_coords { 0.0f, 1.0f } },
+        Render::Vertex { .m_position { -0.5f, 0.5f, -0.5f }, .m_textCoords { 0.0f, 0.0f } },
+        Render::Vertex { .m_position { 0.5f, 0.5f, -0.5f }, .m_textCoords { 1.0f, 0.0f } },
+        Render::Vertex { .m_position { 0.5f, 0.5f, 0.5f }, .m_textCoords { 1.0f, 1.0f } },
+        Render::Vertex { .m_position { -0.5f, 0.5f, 0.5f }, .m_textCoords { 0.0f, 1.0f } },
 
         // Bottom Face
-        HasbuRender::Vertex { .position { -0.5f, -0.5f, -0.5f }, .text_coords { 0.0f, 0.0f } },
-        HasbuRender::Vertex { .position { 0.5f, -0.5f, -0.5f }, .text_coords { 1.0f, 0.0f } },
-        HasbuRender::Vertex { .position { 0.5f, -0.5f, 0.5f }, .text_coords { 1.0f, 1.0f } },
-        HasbuRender::Vertex { .position { -0.5f, -0.5f, 0.5f }, .text_coords { 0.0f, 1.0f } },
+        Render::Vertex { .m_position { -0.5f, -0.5f, -0.5f }, .m_textCoords { 0.0f, 0.0f } },
+        Render::Vertex { .m_position { 0.5f, -0.5f, -0.5f }, .m_textCoords { 1.0f, 0.0f } },
+        Render::Vertex { .m_position { 0.5f, -0.5f, 0.5f }, .m_textCoords { 1.0f, 1.0f } },
+        Render::Vertex { .m_position { -0.5f, -0.5f, 0.5f }, .m_textCoords { 0.0f, 1.0f } },
 
         // Left Face
-        HasbuRender::Vertex { .position { -0.5f, -0.5f, -0.5f }, .text_coords { 0.0f, 0.0f } },
-        HasbuRender::Vertex { .position { -0.5f, -0.5f, 0.5f }, .text_coords { 1.0f, 0.0f } },
-        HasbuRender::Vertex { .position { -0.5f, 0.5f, 0.5f }, .text_coords { 1.0f, 1.0f } },
-        HasbuRender::Vertex { .position { -0.5f, 0.5f, -0.5f }, .text_coords { 0.0f, 1.0f } },
+        Render::Vertex { .m_position { -0.5f, -0.5f, -0.5f }, .m_textCoords { 0.0f, 0.0f } },
+        Render::Vertex { .m_position { -0.5f, -0.5f, 0.5f }, .m_textCoords { 1.0f, 0.0f } },
+        Render::Vertex { .m_position { -0.5f, 0.5f, 0.5f }, .m_textCoords { 1.0f, 1.0f } },
+        Render::Vertex { .m_position { -0.5f, 0.5f, -0.5f }, .m_textCoords { 0.0f, 1.0f } },
 
         // Right Face
-        HasbuRender::Vertex { .position { 0.5f, -0.5f, -0.5f }, .text_coords { 0.0f, 0.0f } },
-        HasbuRender::Vertex { .position { 0.5f, -0.5f, 0.5f }, .text_coords { 1.0f, 0.0f } },
-        HasbuRender::Vertex { .position { 0.5f, 0.5f, 0.5f }, .text_coords { 1.0f, 1.0f } },
-        HasbuRender::Vertex { .position { 0.5f, 0.5f, -0.5f }, .text_coords { 0.0f, 1.0f } }
+        Render::Vertex { .m_position { 0.5f, -0.5f, -0.5f }, .m_textCoords { 0.0f, 0.0f } },
+        Render::Vertex { .m_position { 0.5f, -0.5f, 0.5f }, .m_textCoords { 1.0f, 0.0f } },
+        Render::Vertex { .m_position { 0.5f, 0.5f, 0.5f }, .m_textCoords { 1.0f, 1.0f } },
+        Render::Vertex { .m_position { 0.5f, 0.5f, -0.5f }, .m_textCoords { 0.0f, 1.0f } }
     };
 
     std::array<unsigned int, 36> _indices {
@@ -119,48 +117,50 @@ void Application::run()
         20, 21, 23,
         21, 22, 23
     };
-    HasbuRender::Shader shader;
+    Render::Shader shader;
     shader.create("Hasbu/resources/Shaders/3D.vs", "Hasbu/resources/Shaders/3D.fs");
 
-    HasbuAPIContext::VertexArray vertexArray;
+    Render::VertexArray vertexArray;
     vertexArray.create(_vertices, _indices);
 
-    vertexArray.attribPointer(HasbuAPIContext::VertexAttrib::POSITIONS);
-    vertexArray.attribPointer(HasbuAPIContext::VertexAttrib::TEXTURES_COORDS);
+    vertexArray.attribPointer(Render::VertexAttrib::POSITIONS);
+    vertexArray.attribPointer(Render::VertexAttrib::TEXTURES_COORDS);
 
-    HasbuRender::Texture texture1;
+    Render::Texture texture1;
     texture1.create("Hasbu/resources/Textures/container.jpg");
 
-    HasbuRender::Texture texture2;
+    Render::Texture texture2;
     texture2.create("Hasbu/resources/Textures/awesomeface.png");
 
     shader.bind();
     shader.setInt("texture1", 0);
     shader.setInt("texture2", 1);
 
-    // HasbuRender::Mesh mesh;
+    // Render::Mesh mesh;
 
     la::mat4 projection;
     projection = la::perspective(la::to_radians(45.0f),
-        getAspectRatio(this->window->data), 1.0f, 100.0f);
+        m_window->getAspectRatio(), 1.0f, 100.0f);
 
     shader.setM4f("projection", la::getPointer(projection));
 
     int i = 0;
 
-    while (shouldClose(this->window->native_window)) {
+    while (m_window->shouldClose()) {
 
-        HasbuRender::clearWindow();
-        // camera.proccesKeyBoard();
-        processInput();
+        double delta = Render::Renderer::getDeltaTime();
+        Render::Renderer::clearWindow();
+
+        m_window->processInput(delta);
+        camera.proccesKeyBoard(delta);
+        this->proccesInput();
 
         texture1.bind(1);
         texture2.bind(2);
 
         shader.bind();
-        //     mesh.setupDraw(shader);
 
-        double crnt_time = getTime();
+        double currentTime = getTime();
 
         la::mat4 view = camera.getViewMatrix();
 
@@ -173,27 +173,26 @@ void Application::run()
 
             model = la::translate(model, position);
 
-            if (i % 3 == 0) {
-                angle = 55.0 * crnt_time;
-            }
-            model = la::rotate(model,
-                la::vec3 { 100.0f, 0.0f, 0.0f }, la::to_radians(angle));
+            // if (i % 3 == 0) {
+            //     angle = 55.0 * currentTime;
+            // }
+            // model = la::rotate(model,
+            //     la::vec3 { 100.0f, 0.0f, 0.0f }, la::to_radians(angle));
 
             shader.setM4f("model", la::getPointer(model));
 
             glDrawElements(GL_TRIANGLES, static_cast<int>(_indices.size()), GL_UNSIGNED_INT, nullptr);
-            // mesh.draw();
             i++;
         }
 
         i = 0;
-        windowUpdate(this->window->native_window);
+        m_window->update();
     }
 }
 
 void Application::proccesInput()
 {
-    if (isKeyBeenRelased(Hasbu::KeyCode::ESCAPE)) {
+    if (isKeyBeenPressed(KeyCode::ESCAPE)) {
         this->close();
     }
 }
@@ -201,12 +200,12 @@ void Application::proccesInput()
 void Application::close()
 {
     HASBU_INFO("CLOSING Application");
-    this->window->close();
+    this->m_window->close();
 }
 
 Application::~Application()
 {
-    this->window.reset();
-    HasbuUtils::DynamicAllocator::getReport();
+    this->m_window.reset();
+    Utils::DynamicAllocator::getReport();
 }
 }

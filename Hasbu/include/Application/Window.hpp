@@ -1,35 +1,30 @@
 #pragma once
-#include "WindowData.hpp"
-#include "defines.hpp"
+#include "Application/WindowData.hpp"
+#include "Utilities/DynamicAllocator.hpp"
 
 struct GLFWwindow;
 
-namespace Hasbu {
+namespace Hasbu::Core {
 
 class Window {
 public:
-    Window(const unsigned int width, const unsigned int height);
-    Window();
-
-    ~Window() = default;
+    explicit Window(const unsigned int width, const unsigned int height);
+    explicit Window();
 
     void close();
+    void clearWindow();
+    void update();
+    void processInput(const double deltaTime) const;
+    bool shouldClose() const;
 
-    GLFWwindow* native_window;
-    WindowData data;
+    constexpr float getAspectRatio() const
+    {
+        return static_cast<float>(m_data->m_width) / static_cast<float>(m_data->m_height);
+    }
+
+    Utils::Unique<WindowData> m_data = Utils::createUnique<WindowData>(nullptr);
 };
-
-void clearWindow();
-bool shouldClose(GLFWwindow* native_window);
-
-void windowUpdate(GLFWwindow* native_window);
-
-void processInput(void);
 
 double getTime();
 
-constexpr float getAspectRatio(const WindowData& window_data)
-{
-    return static_cast<float>(window_data.width) / static_cast<float>(window_data.height);
-}
 }

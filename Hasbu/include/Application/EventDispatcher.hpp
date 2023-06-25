@@ -1,20 +1,16 @@
 #pragma once
 
+#include "Application/KeyCodes.hpp"
 #include "DynamicAllocator.hpp"
+#include "KeyCodes.hpp"
 #include <array>
 #include <functional>
-#include "Application/KeyCodes.hpp"
-#include "KeyCodes.hpp"
 
-namespace HasbuRender {
+namespace Hasbu::Render {
 struct Camera;
 };
 
-namespace Hasbu {
-
-
-
-
+namespace Hasbu::Core {
 
 enum class Event : unsigned int {
 
@@ -33,18 +29,16 @@ struct EventDispatcher {
     using EventKeyFn = std::function<void()>;
     using EventMouseFn = std::function<void(double xpos, double ypos)>;
 
-    EventDispatcher(HasbuRender::Camera& camera);
+    explicit EventDispatcher(Render::Camera& camera);
 
     static void dispatchKeyEvent(Event event);
-    static void dispatchMousEvent(MouseEvent event, const double xpos, const double& ypos);
+    static void dispatchMousEvent(MouseEvent event, const double xpos, const double ypos);
 
     static std::array<EventKeyFn, 3> key_events_functions;
 
     // TODO: acabar de hacer las funcinoes para el mouse input
     static std::array<EventMouseFn, 2> mouse_events_functions;
 };
-
-
 
 Event getEvent(Hasbu::KeyCode key);
 

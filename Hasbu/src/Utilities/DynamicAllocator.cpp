@@ -2,7 +2,7 @@
 #include "Utilities/Logger.hpp"
 #include "defines.hpp"
 
-namespace HasbuUtils {
+namespace Hasbu::Utils {
 
 void DynamicAllocator::initDynamicAllocator(const std::size_t& size)
 {
@@ -28,13 +28,13 @@ DynamicAllocator::DynamicAllocator(const std::size_t& size)
         return;
     }
 
-    this->free_storage = size;
+    this->freeStorage = size;
     HASBU_INFO("ALLOCATE SPACE FOR {} BYTES THE APPLICATION", size);
 }
 
 void* DynamicAllocator::_allocate(const std::size_t& size)
 {
-    HASBU_ASSERT(size < 0 && size > getDynamicAllocator().free_storage, "Size must be grater than 0 and less than free storage")
+    HASBU_ASSERT(size < 0 && size > getDynamicAllocator().freeStorage, "Size must be grater than 0 and less than free storage")
 
     OffsetAllocator::Allocation allocation = getDynamicAllocator().offset_allocator.allocate(size);
 
@@ -52,7 +52,7 @@ void* DynamicAllocator::_allocate(const std::size_t& size)
         getDynamicAllocator().allocations.push_back(allocation);
     }
 
-    getDynamicAllocator().free_storage -= size;
+    getDynamicAllocator().freeStorage -= size;
 
     return static_cast<char*>(getDynamicAllocator().block) + allocation.offset;
 }
@@ -72,7 +72,7 @@ bool DynamicAllocator::_deallocate(void* ptr, const std::size_t& size)
     if (find_it != getDynamicAllocator().allocations.end()) {
         getDynamicAllocator().offset_allocator.free(*find_it);
         getDynamicAllocator().allocations.erase(find_it);
-        getDynamicAllocator().free_storage += size;
+        getDynamicAllocator().freeStorage += size;
 
         HASBU_INFO("Dealocated Allocation [{}] You still have #{} Allocations", ptr, getDynamicAllocator().allocations.size());
 
@@ -90,14 +90,14 @@ DynamicAllocator::~DynamicAllocator()
     }
 
     ::operator delete(this->block);
-    this->free_storage = 0;
+    this->freeStorage = 0;
     this->size = 0;
     HASBU_INFO("DYNAMIC ALLCATOR DESTOYED");
 }
 
 void DynamicAllocator::getReport()
 {
-    HASBU_DEBUG("REPORT: TOTAL SIZE ALLOCATED [{} BYTES], TOTAL STORAGE FREE [{}] BYTES, TOTAL ALLOCATIONS [{}]", getDynamicAllocator().size, getDynamicAllocator().free_storage, getDynamicAllocator().allocations.size());
+    HASBU_DEBUG("REPORT: TOTAL SIZE ALLOCATED [{} BYTES], TOTAL STORAGE FREE [{}] BYTES, TOTAL ALLOCATIONS [{}]", getDynamicAllocator().size, getDynamicAllocator().freeStorage, getDynamicAllocator().allocations.size());
 }
 
 }

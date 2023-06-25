@@ -4,11 +4,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image/stb_image.h"
 
-#include <GL/glew.h>
 #include <fstream>
 #include <sstream>
 
-namespace HasbuUtils {
+namespace Hasbu::Utils {
 
 unsigned char* loadTexture(const std::string_view& file_name, int& image_width, int& image_height, int& image_nr_chanels)
 {
@@ -25,21 +24,6 @@ unsigned char* loadTexture(const std::string_view& file_name, int& image_width, 
 void freeTexture(unsigned char* texture_data)
 {
     stbi_image_free(texture_data);
-}
-
-int getTextureType(const int& image_nr_chanels)
-{
-    switch (image_nr_chanels) {
-    case 1:
-        return GL_RED;
-    case 3:
-        return GL_RGB;
-    case 4:
-        return GL_RGBA;
-    default:
-        HASBU_FATAL("INvalid NR channels {} \n", image_nr_chanels);
-        return -1;
-    }
 }
 
 std::string loadShader(const std::string_view& file_name)
