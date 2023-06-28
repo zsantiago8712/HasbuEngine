@@ -43,3 +43,10 @@ MakeFile
 /build
 /build_debug_opengl
 /Logs
+
+
+/cmake-build-debug
+
+/.idea
+
+/*.inii

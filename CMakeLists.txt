@@ -8,7 +8,6 @@ set(CMAKE_OSX_ARCHITECTURES "arm64")
 
 include(${CMAKE_SOURCE_DIR}/config.cmake)
 
-
 project(HasbuEngine VERSION 0.1
     DESCRIPTION "A game engine"
     LANGUAGES CXX)
@@ -20,7 +19,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Set the C++ compiler and export the compile commands
 set(CMAKE_CXX_COMPILER /opt/homebrew/opt/llvm/bin/clang++)
 
-# set(CMAKE_CXX_COMPILER /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Configure options for Debug and Release
@@ -30,7 +28,7 @@ endif()
 
 # Add specific compile options for Debug and Release modes
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(-g -Og -Wall -Wextra -fno-omit-frame-pointer -fstack-protector)
+    add_compile_options(-g -O0 -Wno-nonportable-include-path -Wall -Wextra -fno-omit-frame-pointer -fstack-protector)
     add_compile_definitions(DEBUG)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_options(-O3 -march=native -flto)

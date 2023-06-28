@@ -21,6 +21,6 @@ struct VertexArray {
     void create(const std::span<Vertex> vertices, const std::span<unsigned int> indices);
     void bind() const;
     void unBindVertexArray() const;
-    void attribPointer(VertexAttrib attrib, const std::size_t& size = 3);
+    void attribPointer(VertexAttrib attrib, const std::size_t size = 3) const;
 };
 }

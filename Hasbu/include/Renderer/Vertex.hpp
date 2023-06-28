@@ -1,12 +1,12 @@
 #pragma once
-#include "LA/la.hpp"
+#include <glm/glm.hpp>
 
 namespace Hasbu::Render {
 
 struct Vertex {
-    la::vec3 m_position;
-    // // la::vec3 normal;
-    la::vec2 m_textCoords;
+    glm::vec3 m_position;
+    glm::vec3 m_normal;
+    glm::vec2 m_textCoords;
 };
 
 }

@@ -16,6 +16,9 @@ EventDispatcher::EventDispatcher(Render::Camera& camera)
         [&camera](const double xpos, const double ypos) {
             camera.proccesMouseInput(xpos, ypos);
         },
+        [&camera](const double xpos, const double ypos) {
+            camera.processScroll(xpos, ypos);
+        }
 
     };
 

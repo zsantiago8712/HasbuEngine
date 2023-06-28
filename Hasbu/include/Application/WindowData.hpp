@@ -12,7 +12,7 @@ struct WindowData {
     ~WindowData();
 
     unsigned int m_width = 800;
-    unsigned int m_height = 900;
+    unsigned int m_height = 600;
     const std::string_view m_name = "Hasbu Engine";
     GLFWwindow* m_window;
 };

@@ -17,13 +17,13 @@ Renderer::Renderer()
     createOpenGLContext();
 }
 
-void Renderer::clearWindow()
+void Renderer::clearWindow(const float red, const float green, const float blue, const float alpha)
 {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(red, green, blue, alpha);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::checkError(const char* file, const int& line)
+void Renderer::checkError(const char* file, const int line)
 {
     unsigned int severity;
     do {
@@ -57,6 +57,11 @@ double Renderer::getDeltaTime()
     double delta_time = current_time - m_lastFrame;
     m_lastFrame = current_time;
     return delta_time;
+}
+
+void Renderer::drawElements(const unsigned int size)
+{
+    glDrawElements(GL_TRIANGLES, size, GL_UNSIGNED_INT, nullptr);
 }
 
 }

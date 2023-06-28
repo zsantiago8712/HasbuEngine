@@ -14,7 +14,7 @@ public:
     void close();
     void clearWindow();
     void update();
-    void processInput(const double deltaTime) const;
+    void processInput() const;
     bool shouldClose() const;
 
     constexpr float getAspectRatio() const

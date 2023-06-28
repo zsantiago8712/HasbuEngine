@@ -169,7 +169,7 @@ void Application::run()
         Gui::ImGuiLayer::begin();
         Panels::debugPanel(&colorCube[0], deltaTime, ambientStrength, specularStrength, iluminationSelected);
 
-        Render::Renderer::clearWindow(0.0f, 0.0f, 0.0f, 0.0);
+        Render::Renderer::clearWindow(0.0f, 0.0f, 0.0f);
 
         m_window->processInput();
         camera.proccesKeyBoard(deltaTime);
@@ -178,11 +178,21 @@ void Application::run()
         // texture1.bind(1);
         // texture2.bind(2);
 
+        glm::vec3 newColor { sin(getTime()) * 0.5f, cos(getTime()) * 0.5f, cos(getTime()) * sin(getTime()) };
+
+        glm::vec3 newPosition { static_cast<float>(cos(getTime())), 0.3f, static_cast<float>(sin(getTime())) };
+        glm::vec3 newPosition2 = { 0.5, static_cast<float>(sin(getTime())), static_cast<float>(cos(getTime())) };
+
         ligthingShader.bind();
         ligthingShader.setInt("selectLighting", iluminationSelected);
         ligthingShader.setVec3("objectColor", glm::value_ptr(colorCube));
-        ligthingShader.setVec3("lightColor", glm::value_ptr(lights));
-        ligthingShader.setVec3("lightPosition", glm::value_ptr(ligttPos));
+        // ligthingShader.setVec3("lightColor", glm::value_ptr(lights));
+        ligthingShader.setVec3("lightColor", glm::value_ptr(newColor));
+        // ligthingShader.setVec3("lightPosition", glm::value_ptr(ligttPos));
+
+        ligthingShader.setVec3("lightPosition", glm::value_ptr(newPosition));
+        ligthingShader.setVec3("lightPosition2", glm::value_ptr(newPosition2));
+
         ligthingShader.setVec3("viewPosition", glm::value_ptr(camera.m_position));
         ligthingShader.setFloat("ambientStrength", ambientStrength);
         ligthingShader.setFloat("specularStrength", specularStrength);
@@ -195,6 +205,8 @@ void Application::run()
         ligthingShader.setM4f("view", glm::value_ptr(view));
 
         auto model = glm::mat4(1.0f);
+        float angle = getTime() * 55.0f;
+        model = glm::rotate(model, glm::radians(angle), { 0.0, 1.0f, 0.0f });
         ligthingShader.setM4f("model", glm::value_ptr(model));
 
         Render::RenderManager::bindVAO(cube_vao);
@@ -204,12 +216,31 @@ void Application::run()
         lightsCubeShader.setM4f("projection", glm::value_ptr(projection));
         lightsCubeShader.setM4f("view", glm::value_ptr(view));
 
+        lightsCubeShader.setVec3("color", glm::value_ptr(newColor));
+
         model = glm::mat4(1.0f);
-        model = glm::translate(model, ligttPos);
-        model = glm::scale(model, glm::vec3(0.2f));
+
+        model = glm::translate(model, newPosition);
+
+        // model = glm::translate(model, ligttPos);
+        model
+            = glm::scale(model, glm::vec3(0.2f));
         lightsCubeShader.setM4f("model", glm::value_ptr(model));
 
         Render::RenderManager::bindVAO(lightCube_vao);
+        Render::Renderer::drawElements(_indices.size());
+
+        glm::vec3 newColor2 { cos(getTime()) * 2.5f, cos(getTime()) * 2.5f, cos(getTime()) * sin(getTime()) };
+
+        lightsCubeShader.setVec3("color", glm::value_ptr(newColor2));
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, newPosition2);
+
+        // model = glm::translate(model, ligttPos);
+        model = glm::scale(model, glm::vec3(0.2f));
+        lightsCubeShader.setM4f("model", glm::value_ptr(model));
+
         Render::Renderer::drawElements(_indices.size());
 
         Gui::ImGuiLayer::render();

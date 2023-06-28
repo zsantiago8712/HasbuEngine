@@ -1,8 +1,0 @@
-[submodule "Hasbu/vendor/LA"]
-	path = Hasbu/vendor/LA
-	url = https://github.com/zsantiago8712/LA.git
-	branch = master
-[submodule "OpenGl/vendor/LA"]
-	path = OpenGl/vendor/LA
-	url = https://github.com/zsantiago8712/LA.git
-	branch = master

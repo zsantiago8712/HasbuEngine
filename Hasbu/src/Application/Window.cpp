@@ -1,8 +1,11 @@
 #include "Application/Window.hpp"
 #include "DynamicAllocator.hpp"
 #include "EventDispatcher.hpp"
+#include "ImGui/ImguiLayer.hpp"
+#include "Imgui/ImguiLayer.hpp"
 #include "Utilities/Logger.hpp"
 #include "WindowData.hpp"
+#include "imgui.h"
 #include <GLFW/glfw3.h>
 
 static void initializedGLFW();
@@ -14,8 +17,15 @@ Window::Window(const unsigned int width, const unsigned int height)
     m_data = Utils::createUnique<WindowData>(width, height);
 
     glfwSetCursorPosCallback(this->m_data->m_window, []([[maybe_unused]] GLFWwindow* window, const double xpos, const double ypos) {
-        HASBU_DEBUG("Curosr Postion: [X: {}, Y: {}]", xpos, ypos);
-        EventDispatcher::dispatchMousEvent(MouseEvent::CURSOR, xpos, ypos);
+        if (!Gui::ImGuiLayer::wantCaptureMouse()) {
+            HASBU_DEBUG("Curosr Postion: [X: {}, Y: {}]", xpos, ypos);
+            EventDispatcher::dispatchMousEvent(MouseEvent::CURSOR, xpos, ypos);
+        }
+    });
+
+    glfwSetScrollCallback(this->m_data->m_window, []([[maybe_unused]] GLFWwindow* window, const double xpos, const double ypos) {
+        HASBU_DEBUG("SCROLL Curosr Postion: [X: {}, Y: {}]", xpos, ypos);
+        EventDispatcher::dispatchMousEvent(MouseEvent::SCROLL, xpos, ypos);
     });
 };
 
@@ -25,8 +35,15 @@ Window::Window()
     m_data = Utils::createUnique<WindowData>();
 
     glfwSetCursorPosCallback(this->m_data->m_window, []([[maybe_unused]] GLFWwindow* window, const double xpos, const double ypos) {
-        HASBU_DEBUG("Curosr Postion: [X: {}, Y: {}]", xpos, ypos);
-        EventDispatcher::dispatchMousEvent(MouseEvent::CURSOR, xpos, ypos);
+        if (!Gui::ImGuiLayer::wantCaptureMouse()) {
+            HASBU_DEBUG("Curosr Postion: [X: {}, Y: {}]", xpos, ypos);
+            EventDispatcher::dispatchMousEvent(MouseEvent::CURSOR, xpos, ypos);
+        }
+    });
+
+    glfwSetScrollCallback(this->m_data->m_window, []([[maybe_unused]] GLFWwindow* window, const double xpos, const double ypos) {
+        HASBU_DEBUG("Scroll Curosr  Postion: [X: {}, Y: {}]", xpos, ypos);
+        EventDispatcher::dispatchMousEvent(MouseEvent::SCROLL, xpos, ypos);
     });
 
     // TODO: make a better keyclalback
@@ -48,14 +65,8 @@ void Window::update()
 }
 
 // TODO: manejar los callbacks (inputs, tamaño, etc)
-void Window::processInput(const double deltaTime) const
+void Window::processInput() const
 {
-    const std::string FPS = std::to_string(1 / deltaTime);
-    const std::string ms = std::to_string(deltaTime * 1000);
-    const std::string newTitle = FPS + " FPS / " + ms + " ms";
-#ifdef DEBUG
-    glfwSetWindowTitle(m_data->m_window, newTitle.data());
-#endif
     glfwPollEvents();
 }
 

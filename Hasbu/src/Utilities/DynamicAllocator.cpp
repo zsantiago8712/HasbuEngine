@@ -1,6 +1,5 @@
 #include "Utilities/DynamicAllocator.hpp"
 #include "Utilities/Logger.hpp"
-#include "defines.hpp"
 
 namespace Hasbu::Utils {
 

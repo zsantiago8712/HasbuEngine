@@ -10,12 +10,32 @@ WindowData::WindowData(const unsigned int height, const unsigned int width)
     : m_width(width)
     , m_height(height)
 {
+
     this->m_window = createNativeWindow(m_width, m_height, m_name);
+    glfwSetWindowUserPointer(m_window, this);
+
+    glfwSetWindowSizeCallback(m_window, []([[maybe_unused]] GLFWwindow* window, const int width, const int height) {
+        auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+        data->m_width = static_cast<unsigned int>(width);
+        data->m_height = static_cast<unsigned int>(height);
+
+        HASBU_DEBUG("NEW WINDOW SIZE W{} H{}", data->m_width, data->m_height);
+    });
 }
 
 WindowData::WindowData()
 {
     m_window = createNativeWindow(m_width, m_height, m_name);
+
+    glfwSetWindowUserPointer(m_window, this);
+
+    glfwSetWindowSizeCallback(m_window, []([[maybe_unused]] GLFWwindow* window, const int width, const int height) {
+        auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+        data->m_width = static_cast<unsigned int>(width);
+        data->m_height = static_cast<unsigned int>(height);
+
+        HASBU_DEBUG("NEW WINDOW SIZE W{} H{}", data->m_width, data->m_height);
+    });
 }
 
 WindowData::~WindowData()
@@ -32,7 +52,7 @@ static GLFWwindow* createNativeWindow(const unsigned int width, const unsigned i
     GLFWwindow* window = glfwCreateWindow(width, height, name.data(), nullptr, nullptr);
     HASBU_ASSERT(window == nullptr, "GLFW filaed to create a window")
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwMakeContextCurrent(window);
     HASBU_INFO("GLFW SUCCES TO INITIAZED AND CREATE A WINDOW");
     return window;

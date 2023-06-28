@@ -1,3 +1,4 @@
+#include "DynamicAllocator.hpp"
 #include "FileManager.hpp"
 #include "Renderer/Shader.hpp"
 #include "Utilities/Logger.hpp"
@@ -80,13 +81,12 @@ static void linkProgram(const unsigned int id_program)
 namespace Hasbu::Render {
 
 Shader::Shader()
-{
-    this->m_data = Utils::createShared<ApiContext::ShaderDataApi>();
-}
+    : m_data(Utils::createUnique<ApiContext::ShaderDataApi>()) {};
 
 void Shader::create(const std::string_view& vs_file, const std::string_view& fs_file)
 {
     ApiContext::createShader(this->m_data->id, vs_file, fs_file);
+    HASBU_DEBUG("{} ID: {}", vs_file, m_data->id);
 }
 
 void Shader::bind() const
@@ -113,5 +113,17 @@ void Shader::setM4f(const std::string_view& uniform_name, const float* data) con
 {
     glUniformMatrix4fv(glGetUniformLocation(this->m_data->id, uniform_name.data()), 1, GL_FALSE, data);
 }
+
+void Shader::setVec3(const std::string_view& uniformName, const float* data) const
+{
+    glUniform3fv(glGetUniformLocation(this->m_data->id, uniformName.data()), 1, data);
+}
+
+
+void Shader::setFloat(const std::string_view& uniformName, const float data) const
+{
+    glUniform1f(glGetUniformLocation(this->m_data->id, uniformName.data()), data);
+}
+
 
 }
