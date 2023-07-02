@@ -8,11 +8,12 @@ option(USE_OPENGL "Use OpenGL" ON)
 option(USE_VULKAN "Use Vulkan" OFF)
 
 # Add subdirectories
+add_subdirectory(vendor/imgui)
 add_subdirectory(src/API)
 add_subdirectory(src/Application)
 add_subdirectory(src/Utilities)
 add_subdirectory(src/Renderer)
-add_subdirectory(src/Imgui)
+add_subdirectory(src/ImguiLayer)
 add_subdirectory(src/Panels)
 
 # Create the precompiled header
@@ -33,18 +34,14 @@ target_include_directories(HasbuLib PUBLIC
 
     # ${HASBULIB_INCLUDE_VENDOR_DIR}/Json
     ${HASBULIB_INCLUDE_VENDOR_DIR}/stb_image
+    ${HASBULIB_INCLUDE_VENDOR_DIR}/imgui
 )
 
 # Find required packages and link them
-list(APPEND REQUIRED_LIBS glfw3 spdlog imgui)
+list(APPEND REQUIRED_LIBS spdlog glfw3)
 
 foreach(PKG ${REQUIRED_LIBS})
-
-    if(${PKG} STREQUAL "imgui")
-        find_package(${PKG} CONFIG REQUIRED)
-    else()
-        find_package(${PKG} REQUIRED)
-    endif()
+    find_package(${PKG} REQUIRED)
 
     if(${PKG}_FOUND)
         message(STATUS "${PKG} library found. Version: ${${PKG}_VERSION}")
@@ -53,8 +50,6 @@ foreach(PKG ${REQUIRED_LIBS})
             target_link_libraries(HasbuLib PUBLIC glfw)
         elseif(${PKG} STREQUAL "spdlog")
             target_link_libraries(HasbuLib PUBLIC spdlog::spdlog)
-        elseif(${PKG} STREQUAL "imgui")
-            target_link_libraries(HasbuLib PRIVATE imgui::imgui)
         endif()
     else()
         message(FATAL_ERROR "${PKG} library not found")
@@ -88,3 +83,4 @@ elseif(USE_OPENGL)
     endif()
 endif()
 
+target_link_libraries(HasbuLib PRIVATE imgui)

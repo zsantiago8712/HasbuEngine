@@ -1,10 +1,9 @@
 #include "Renderer/Camera.hpp"
 #include "Application/Input.hpp"
-#include "Application/KeyCodes.hpp"
-#include "Imgui/ImguiLayer.hpp"
-#include "Renderer/Render.hpp"
+#include "ImGuiLayer/ImguiLayer.hpp"
 #include "Utilities/Logger.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+
 namespace Hasbu::Render {
 
 Camera::MovementType Camera::m_movementType = Camera::MovementType::STATIC;
@@ -45,11 +44,10 @@ void Camera::proccesMouseInput(const double xpos, const double ypos)
     if (Camera::m_movementType != Camera::MovementType::STATIC) {
         static bool first = true;
 
-        auto new_xpos = static_cast<float>(xpos);
-        auto new_ypos = static_cast<float>(ypos);
+        const auto new_xpos = static_cast<float>(xpos);
+        const auto new_ypos = static_cast<float>(ypos);
 
         if (first) {
-            HASBU_DEBUG("first {}", first);
             m_lastX = new_xpos;
             m_lastY = new_ypos;
             first = false;
@@ -57,6 +55,7 @@ void Camera::proccesMouseInput(const double xpos, const double ypos)
 
         float xoffset = new_xpos - m_lastX;
         float yoffset = m_lastY - new_ypos;
+
         m_lastX = new_xpos;
         m_lastY = new_ypos;
 
@@ -101,10 +100,15 @@ void Camera::updatePosition()
     } else if (Core::isKeyBeenPressed(KeyCode::D)) {
         m_position += m_right * m_speed;
         HASBU_DEBUG("Move to the Left");
+    }else if(Core::isKeyBeenPressed(KeyCode::SPACE)) {
+        m_position += m_speed * m_up;
+        HASBU_DEBUG("Move up");
+    }else if(Core::isKeyBeenPressed(KeyCode::LEFT_SHIFT)) {
+        m_position -= m_up * m_speed;
+        HASBU_DEBUG("Move Down");
     }
 
     // NOTE: Con esto mantienes al jugador sobre el piso
-
     if (Camera::m_movementType == Camera::MovementType::FPS) {
         m_position.y = 0;
     }

@@ -14,10 +14,7 @@ unsigned char* loadTexture(const std::string_view& file_name, int& image_width, 
     stbi_set_flip_vertically_on_load(true);
     unsigned char* image_data = stbi_load(file_name.data(), &image_width, &image_height, &image_nr_chanels, 0);
 
-    if (image_data == nullptr) {
-        const char* error = stbi_failure_reason();
-        HASBU_FATAL("Texture {} file not found {}\n", file_name, error);
-    }
+    HASBU_ASSERT(image_data == nullptr, "Texture File not found")
     return image_data;
 }
 
@@ -29,11 +26,8 @@ void freeTexture(unsigned char* texture_data)
 std::string loadShader(const std::string_view& file_name)
 {
     std::ifstream shader_file(file_name.data());
-    if (!shader_file.good()) {
-        HASBU_FATAL("Shader File {} not found!!\n", file_name);
-        return nullptr;
-    }
 
+    HASBU_ASSERT(shader_file.good() == false, "Shader File not found")
     std::stringstream buffer;
     buffer << shader_file.rdbuf();
     shader_file.close();

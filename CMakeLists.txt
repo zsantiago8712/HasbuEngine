@@ -31,7 +31,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-g -O0 -Wno-nonportable-include-path -Wall -Wextra -fno-omit-frame-pointer -fstack-protector)
     add_compile_definitions(DEBUG)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O3 -march=native -flto)
+    add_compile_options(-O3)
     add_compile_definitions(RELEASE)
 endif()
 

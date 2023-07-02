@@ -18,6 +18,11 @@ enum class VertexAttrib {
 
 class RenderManager {
 public:
+    static void createRenderContext();
+
+    static void clearWindow(const float red = 0.2f, const float green = 0.3f, const float blue = 0.3f, const float alpha = 1.0f);
+    static void drawElements(const unsigned int size);
+
     static unsigned int createVAO();
     static unsigned int createVBO(std::span<Vertex> vertices);
     static unsigned int createEBO(std::span<unsigned int> indices);
@@ -36,10 +41,23 @@ public:
 
     static void attribPointer(VertexAttrib attrib);
 
+    static void checkError(const char* file, const int line);
+    static double getDeltaTime();
+
+    enum class API {
+        GL = 0X0,
+        VK = 0X1,
+    };
+    API m_api;
+
 private:
     static RenderManager& getInstance();
     RenderManager();
+
+    static double m_lastFrame;
     Utils::Unique<ApiContext::RenderData> m_data;
 };
+
+#define CHECK_ERROR() Hasbu::Render::Renderer::checkError(__FILE__, __LINE__);
 
 }

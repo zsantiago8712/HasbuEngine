@@ -1,14 +1,12 @@
 #include "Application/Application.hpp"
 #include "Application/EventDispatcher.hpp"
 #include "Application/Input.hpp"
-#include "Imgui/ImguiLayer.hpp"
-#include "KeyCodes.hpp"
+#include "ImGuiLayer/ImguiLayer.hpp"
 #include "Panels/Panels.hpp"
 #include "Renderer/Camera.hpp"
-#include "Renderer/Render.hpp"
 #include "Renderer/RenderManager.hpp"
-#include "Renderer/Shader.hpp"
-#include "Renderer/Texture.hpp"
+#include "Renderer/ShaderManager.hpp"
+#include "Renderer/TextureManager.hpp"
 #include "Utilities/Logger.hpp"
 #include <array>
 #include <glm/gtc/matrix_transform.hpp>
@@ -42,6 +40,7 @@ Application& Application::createApplication(void)
 void Application::start()
 {
     HASBU_INFO("Application started");
+    Render::RenderManager::createRenderContext();
 }
 
 void Application::run()
@@ -118,16 +117,21 @@ void Application::run()
         glm::vec3(-1.3f, 1.0f, -1.5f)
     };
 
+    glm::vec3 pointLightPositions[] = {
+        glm::vec3(0.7f, 0.2f, 2.0f),
+        glm::vec3(2.3f, -3.3f, -4.0f),
+        glm::vec3(-4.0f, 2.0f, -12.0f),
+        glm::vec3(0.0f, 0.0f, -3.0f)
+    };
+
     Gui::ImGuiLayer::create();
 
     Render::Camera camera;
     EventDispatcher event_dispatcher(camera);
 
-    Render::Shader ligthingShader;
-    ligthingShader.create("Hasbu/resources/Shaders/Colors_vs.glsl", "Hasbu/resources/Shaders/Colors_fs.glsl");
+    unsigned int ligthingShader = Render::ShaderManager::createShader("Hasbu/resources/Shaders/MultipleLights_vs.glsl", "Hasbu/resources/Shaders/MultipleLights_fs.glsl");
 
-    Render::Shader lightsCubeShader;
-    lightsCubeShader.create("Hasbu/resources/Shaders/Ligths_vs.glsl", "Hasbu/resources/Shaders/Ligths_fs.glsl");
+    unsigned int lightsCubeShader = Render::ShaderManager::createShader("Hasbu/resources/Shaders/Ligths_vs.glsl", "Hasbu/resources/Shaders/Ligths_fs.glsl");
 
     unsigned int cube_vao = Render::RenderManager::createVAO();
     unsigned int vbo = Render::RenderManager::createVBO(_vertices);
@@ -143,75 +147,122 @@ void Application::run()
     Render::RenderManager::attribPointer(Render::VertexAttrib::NORMALS);
     Render::RenderManager::attribPointer(Render::VertexAttrib::TEXTURES_COORDS);
 
-    // Render::Texture texture1;
-    // texture1.create("Hasbu/resources/Textures/container.jpg");
+    auto texture1 = Render::TextureManager::createTexture("Hasbu/resources/Textures/container2.png");
+    auto texture2 = Render::TextureManager::createTexture("Hasbu/resources/Textures/container2_specular.png");
+    auto texture3 = Render::TextureManager::createTexture("Hasbu/resources/Textures/matrix.jpg");
 
-    // Render::Texture texture2;
-    // texture2.create("Hasbu/resources/Textures/awesomeface.png");
+    // glm::vec3 ligttPos(1.2f, 1.0f, 2.0f);
+    glm::vec3 ligttPos(-0.2f, -1.0f, -0.3f);
 
-    glm::vec3 ligttPos(1.2f, 1.0f, 2.0f);
-
-    glm::vec3 colorCube(1.0f, 0.5, .3f);
-    glm::vec3 lights(1.0f, 1.0f, 1.0f);
-
-    float ambientStrength = 0.1f;
-    int iluminationSelected = 0;
-    float specularStrength = 0.5f;
-
-    // shader.setInt("texture1", 0);
-    // shader.setInt("texture2", 1);
+    glm::vec3 ambientColor { 0.2f, 0.2f, 0.2f };
+    glm::vec3 diffuseColor { 0.5f, 0.5f, 0.5f };
+    glm::vec3 specularColor { 1.0f, 1.0f, 1.0f };
 
     // Render::Mesh mesh;
+    Render::ShaderManager::bind(ligthingShader);
+    Render::ShaderManager::setInt(ligthingShader, "material.diffuse", 0);
+    Render::ShaderManager::setInt(ligthingShader, "material.specular", 1);
+    Render::ShaderManager::setInt(ligthingShader, "material.emission", 2);
 
     while (m_window->shouldClose()) {
 
-        double deltaTime = Render::Renderer::getDeltaTime();
+        double deltaTime = Render::RenderManager::getDeltaTime();
         Gui::ImGuiLayer::begin();
-        Panels::debugPanel(&colorCube[0], deltaTime, ambientStrength, specularStrength, iluminationSelected);
+        Panels::debugPanel(glm::value_ptr(ambientColor), glm::value_ptr(diffuseColor), glm::value_ptr(specularColor), deltaTime);
 
-        Render::Renderer::clearWindow(0.0f, 0.0f, 0.0f, 0.0);
+        ligttPos = { 0.25f, cos(getTime()) * 1.5f, sin(getTime()) * 2.0f };
+        Render::RenderManager::clearWindow(0.1f, 0.1f, 0.1f, 1.0f);
 
         m_window->processInput();
         camera.proccesKeyBoard(deltaTime);
         this->proccesInput();
 
-        // texture1.bind(1);
-        // texture2.bind(2);
+        Render::ShaderManager::bind(ligthingShader);
 
-        ligthingShader.bind();
-        ligthingShader.setInt("selectLighting", iluminationSelected);
-        ligthingShader.setVec3("objectColor", glm::value_ptr(colorCube));
-        ligthingShader.setVec3("lightColor", glm::value_ptr(lights));
-        ligthingShader.setVec3("lightPosition", glm::value_ptr(ligttPos));
-        ligthingShader.setVec3("viewPosition", glm::value_ptr(camera.m_position));
-        ligthingShader.setFloat("ambientStrength", ambientStrength);
-        ligthingShader.setFloat("specularStrength", specularStrength);
+        Render::ShaderManager::setVec3(ligthingShader, "viewPosition", glm::value_ptr(camera.m_position));
+        Render::ShaderManager::setFloat(ligthingShader, "material.shininess", 32.0f);
+
+        Render::ShaderManager::setVec3(ligthingShader, "dirLight.direction", glm::value_ptr(glm::vec3 { -0.2f, -1.0f, -0.3f }));
+        Render::ShaderManager::setVec3(ligthingShader, "dirLight.ambient", glm::value_ptr(glm::vec3 { 0.05f, 0.05f, 0.05f }));
+        Render::ShaderManager::setVec3(ligthingShader, "dirLight.diffuse", glm::value_ptr(glm::vec3 { 0.4f, 0.4f, 0.4f }));
+        Render::ShaderManager::setVec3(ligthingShader, "dirLight.specular", glm::value_ptr(glm::vec3 { 0.5f, 0.5f, 0.5f }));
+
+        for (int i = 0; i < 4; i++) {
+            pointLightPositions[i] = { cos(getTime()) * 2.3 + i, sin(getTime()) * 3.8 + i, (sin(getTime()) * cos(getTime())) * 1.2 + i};
+            const auto pos = fmt::format("pointLights[{}].position", i);
+            const auto constant = fmt::format("pointLights[{}].constant", i);
+            const auto linear = fmt::format("pointLights[{}].linear", i);
+            const auto quadratic = fmt::format("pointLights[{}].quadratic", i);
+            const auto amb = fmt::format("pointLights[{}].ambient", i);
+            const auto diff = fmt::format("pointLights[{}].diffuse", i);
+            const auto spec = fmt::format("pointLights[{}].specular", i);
+
+            Render::ShaderManager::setVec3(ligthingShader, pos, glm::value_ptr(pointLightPositions[i]));
+
+            Render::ShaderManager::setVec3(ligthingShader, amb, glm::value_ptr(ambientColor));
+            Render::ShaderManager::setVec3(ligthingShader, diff, glm::value_ptr(diffuseColor));
+            Render::ShaderManager::setVec3(ligthingShader, spec, glm::value_ptr(specularColor));
+
+            Render::ShaderManager::setFloat(ligthingShader, constant, 1.0f);
+            Render::ShaderManager::setFloat(ligthingShader, linear, 0.09f);
+            Render::ShaderManager::setFloat(ligthingShader, quadratic, 0.032f);
+        }
+
+        Render::ShaderManager::setVec3(ligthingShader, "spotLight.position", glm::value_ptr(camera.m_position));
+        Render::ShaderManager::setVec3(ligthingShader, "spotLight.direction", glm::value_ptr(camera.m_front));
+        Render::ShaderManager::setFloat(ligthingShader, "spotLight.cutOff", cos(glm::radians(12.5f)));
+        Render::ShaderManager::setFloat(ligthingShader, "spotLight.outerCutOff", cos(glm::radians(15.f)));
+        Render::ShaderManager::setVec3(ligthingShader, "spotLight.ambient", glm::value_ptr(glm::vec3 {0.0f, 0.0f, 0.0f}));
+        Render::ShaderManager::setVec3(ligthingShader, "spotLight.diffuse", glm::value_ptr(glm::vec3 {1.0f, 1.0f, 1.0f}));
+        Render::ShaderManager::setVec3(ligthingShader, "spotLight.specular", glm::value_ptr(glm::vec3 {1.0f, 1.0f, 1.0f}));
+        Render::ShaderManager::setFloat(ligthingShader, "spotLight.constant", 1.0f);
+        Render::ShaderManager::setFloat(ligthingShader, "spotLight.linear", 0.9f);
+        Render::ShaderManager::setFloat(ligthingShader, "spotLight.quadratic", 0.032f);
+        
+
+        Render::TextureManager::activate(texture1, 1);
+        Render::TextureManager::activate(texture2, 2);
+        Render::TextureManager::activate(texture3, 3);
+        Render::RenderManager::bindVAO(cube_vao);
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.m_fov),
             m_window->getAspectRatio(), 0.1f, 100.0f);
-        ligthingShader.setM4f("projection", glm::value_ptr(projection));
+        Render::ShaderManager::setM4f(ligthingShader, "projection", glm::value_ptr(projection));
 
         glm::mat4 view = camera.getViewMatrix();
-        ligthingShader.setM4f("view", glm::value_ptr(view));
+        Render::ShaderManager::setM4f(ligthingShader, "view", glm::value_ptr(view));
 
         auto model = glm::mat4(1.0f);
-        ligthingShader.setM4f("model", glm::value_ptr(model));
 
-        Render::RenderManager::bindVAO(cube_vao);
-        Render::Renderer::drawElements(_indices.size());
+        int i = 0;
+        for (const auto postion : cubePositions) {
+            model = glm::mat4(1.0f);
+            model = glm::rotate(model, glm::radians(i * 20.0f), { 1.0f, 0.3, 0.5f });
+            model = glm::translate(model, postion);
+            Render::ShaderManager::setM4f(ligthingShader, "model", glm::value_ptr(model));
 
-        lightsCubeShader.bind();
-        lightsCubeShader.setM4f("projection", glm::value_ptr(projection));
-        lightsCubeShader.setM4f("view", glm::value_ptr(view));
+            Render::RenderManager::drawElements(_indices.size());
+            i++;
+        }
 
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, ligttPos);
-        model = glm::scale(model, glm::vec3(0.2f));
-        lightsCubeShader.setM4f("model", glm::value_ptr(model));
+        Render::ShaderManager::bind(lightsCubeShader);
+        Render::ShaderManager::setM4f(lightsCubeShader, "projection", glm::value_ptr(projection));
+        Render::ShaderManager::setM4f(lightsCubeShader, "view", glm::value_ptr(view));
 
+        
         Render::RenderManager::bindVAO(lightCube_vao);
-        Render::Renderer::drawElements(_indices.size());
 
+        for(unsigned int i = 0; i < 4; i++){
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, pointLightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.2f));
+            model = glm::rotate(model, (float)glm::radians(deltaTime * 44.2f), { 1.0f, 0.3f, 0.5f });
+
+            Render::ShaderManager::setM4f(lightsCubeShader, "model", glm::value_ptr(model));
+            Render::ShaderManager::setVec3(lightsCubeShader, "color", glm::value_ptr(diffuseColor));
+
+            Render::RenderManager::drawElements(_indices.size());
+        }
         Gui::ImGuiLayer::render();
         m_window->update();
     }
@@ -223,6 +274,8 @@ void Application::proccesInput()
 {
     if (isKeyBeenPressed(KeyCode::ESCAPE)) {
         this->close();
+    } else if (isKeyBeenPressed(KeyCode::R)) {
+        Render::ShaderManager::reaload();
     }
 }
 

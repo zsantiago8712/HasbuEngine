@@ -34,7 +34,7 @@ if [ "$api" = "O" ]; then
     # exit 1;
     cmake_root="${cmake_root}_opengl"
     # Ejecuta el comando de configuración de CMake
-    cmake -DCMAKE_BUILD_TYPE="${build_type}" -DUSE_OPENGL=ON -DUSE_VULKAN=OFF -H"${project_root}" -B"${cmake_root}" -DCMAKE_TOOLCHAIN_FILE=/Users/randymarsh/vcpkg/scripts/buildsystems/vcpkg.cmake -G Ninja;
+    cmake -DCMAKE_BUILD_TYPE="${build_type}" -DUSE_OPENGL=ON -DUSE_VULKAN=OFF -H"${project_root}" -B"${cmake_root}" -G Ninja;
     elif [ "$api" = "V" ]; then
     echo "Using Vulkan SH"
     cmake_root="${cmake_root}_vulkan"

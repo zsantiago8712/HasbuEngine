@@ -2,6 +2,6 @@
 
 namespace Hasbu::Panels {
 
-void debugPanel(float* colors, const float deltaTime, float& ambient, float& specular, int& iluminationSelected);
+void debugPanel(float* ambient, float* diffuse, float* specular, const float deltaTime);
 
 }
