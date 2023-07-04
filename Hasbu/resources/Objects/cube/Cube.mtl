@@ -1,0 +1,16 @@
+# Blender MTL File: 'Cube.blend'
+# Material Count: 1
+
+newmtl Material
+Ns 182.249990
+Ka 1.000000 1.000000 1.000000
+Kd 0.799103 0.799103 0.799103
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Bump Texture_Norm.png
+map_Kd Texture_Col.png
+map_Ns Texture_Rough.png
+refl Texture_Metal.png

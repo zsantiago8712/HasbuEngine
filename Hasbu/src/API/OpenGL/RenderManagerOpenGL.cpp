@@ -69,6 +69,14 @@ void RenderManager::drawElements(const unsigned int size)
     glDrawElements(GL_TRIANGLES, size, GL_UNSIGNED_INT, nullptr);
 }
 
+void RenderManager::drawElementsBaseVertex(const unsigned int size,  const unsigned int baseVertex)
+{
+    glDrawElementsBaseVertex(GL_TRIANGLES, size, GL_UNSIGNED_INT, (void*) (sizeof(unsigned int) * 0), baseVertex);
+}
+
+
+
+
 unsigned int RenderManager::createVAO()
 {
     unsigned int newVao = 0;
@@ -80,7 +88,7 @@ unsigned int RenderManager::createVAO()
     return static_cast<unsigned int>(manager.m_data->vao.size());
 }
 
-unsigned int RenderManager::createVBO(std::span<Vertex> vertices)
+unsigned int RenderManager::createVBO(const std::span<Vertex> vertices)
 {
     unsigned int newVBO = 0;
     ApiContext::createVertexBuffer(newVBO, vertices);
@@ -91,7 +99,7 @@ unsigned int RenderManager::createVBO(std::span<Vertex> vertices)
     return static_cast<unsigned int>(manager.m_data->vbo.size());
 }
 
-unsigned int RenderManager::createEBO(std::span<unsigned int> indices)
+unsigned int RenderManager::createEBO(const std::span<unsigned int> indices)
 {
     unsigned int newEBO = 0;
     ApiContext::createElementsVertexBuffer(newEBO, indices);

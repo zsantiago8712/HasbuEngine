@@ -38,7 +38,7 @@ target_include_directories(HasbuLib PUBLIC
 )
 
 # Find required packages and link them
-list(APPEND REQUIRED_LIBS spdlog glfw3)
+list(APPEND REQUIRED_LIBS spdlog glfw3 assimp)
 
 foreach(PKG ${REQUIRED_LIBS})
     find_package(${PKG} REQUIRED)
@@ -50,11 +50,17 @@ foreach(PKG ${REQUIRED_LIBS})
             target_link_libraries(HasbuLib PUBLIC glfw)
         elseif(${PKG} STREQUAL "spdlog")
             target_link_libraries(HasbuLib PUBLIC spdlog::spdlog)
+        elseif(${PKG} STREQUAL "assimp")
+            target_link_libraries(HasbuLib PUBLIC assimp)
         endif()
     else()
         message(FATAL_ERROR "${PKG} library not found")
     endif()
 endforeach()
+
+include_directories(/opt/homebrew/include)
+target_link_libraries(HasbuLib PUBLIC freeimage)
+
 
 # Validate the api to use
 if(USE_VULKAN)

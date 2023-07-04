@@ -79,7 +79,7 @@ void ShaderManager::reaload()
     const auto size = manager.m_data->ids.size();
 
     for (unsigned int i = 0; i < size; i++) {
-        
+
         const unsigned int programID = manager.m_data->ids[i];
 
         const unsigned int vsID = glCreateShader(GL_VERTEX_SHADER);
@@ -97,7 +97,6 @@ void ShaderManager::reaload()
         compileShader(vsID);
         compileShader(fsID);
 
-
         glUseProgram(0);
         glDetachShader(programID, vsID);
         glDetachShader(programID, fsID);
@@ -108,13 +107,12 @@ void ShaderManager::reaload()
         linkProgram(programID);
         glDeleteShader(vsID);
         glDeleteShader(fsID);
-
     }
 }
 
 void ShaderManager::bind(const unsigned int id)
 {
-    auto& manager = ShaderManager::getInstance();
+    const auto& manager = ShaderManager::getInstance();
     glUseProgram(manager.m_data->ids[id - 1]);
 }
 

@@ -21,11 +21,13 @@ public:
     static void createRenderContext();
 
     static void clearWindow(const float red = 0.2f, const float green = 0.3f, const float blue = 0.3f, const float alpha = 1.0f);
+    
     static void drawElements(const unsigned int size);
+    static void drawElementsBaseVertex(const unsigned int size, const unsigned int baseVertex);
 
     static unsigned int createVAO();
-    static unsigned int createVBO(std::span<Vertex> vertices);
-    static unsigned int createEBO(std::span<unsigned int> indices);
+    static unsigned int createVBO(const std::span<Vertex> vertices);
+    static unsigned int createEBO(const std::span<unsigned int> indices);
 
     static void bindVAO(const unsigned int id);
     static void bindVBO(const unsigned int id);

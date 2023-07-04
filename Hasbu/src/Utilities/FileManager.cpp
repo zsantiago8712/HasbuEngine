@@ -1,26 +1,35 @@
 #include "Utilities/FileManager.hpp"
 #include "Utilities/Logger.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image/stb_image.h"
+#include <FreeImage.h>
 
 #include <fstream>
 #include <sstream>
 
 namespace Hasbu::Utils {
 
+// TODO: probar freeImage. Necesitamos mejorar el rendimeinto al cargar las texturas.
 unsigned char* loadTexture(const std::string_view& file_name, int& image_width, int& image_height, int& image_nr_chanels)
 {
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char* image_data = stbi_load(file_name.data(), &image_width, &image_height, &image_nr_chanels, 0);
 
-    HASBU_ASSERT(image_data == nullptr, "Texture File not found")
+    FreeImage_Initialise();
+
+    FREE_IMAGE_FORMAT fileFormate = FreeImage_GetFIFFromFilename(file_name.data());
+    HASBU_ASSERT(fileFormate == FIF_UNKNOWN, "UNKNOW FILE FORMAT")
+
+    FIBITMAP* bitmap = FreeImage_Load(fileFormate, file_name.data(), 0);
+    HASBU_ASSERT(bitmap == nullptr, "FILE NOT FOUND")
+    // FreeImage_FlipVertical(bitmap);
+    bitmap = FreeImage_ConvertTo32Bits(bitmap);
+
+    image_width = FreeImage_GetWidth(bitmap);
+    image_height = FreeImage_GetHeight(bitmap);
+    image_nr_chanels = (FreeImage_GetBPP(bitmap) / 8);
+
+    BYTE* image_data = FreeImage_GetBits(bitmap);
+    FreeImage_Unload(bitmap);
+    FreeImage_DeInitialise();
     return image_data;
-}
-
-void freeTexture(unsigned char* texture_data)
-{
-    stbi_image_free(texture_data);
 }
 
 std::string loadShader(const std::string_view& file_name)
