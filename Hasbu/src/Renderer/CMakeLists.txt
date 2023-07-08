@@ -1,2 +1,2 @@
 # target_sources(HasbuLib PUBLIC Mesh.cpp)
-target_sources(HasbuLib PUBLIC Camera.cpp MeshManager.cpp ModelsManager.cpp)
+target_sources(HasbuLib PUBLIC CamaraSystem.cpp MeshManager.cpp ModelsManager.cpp)

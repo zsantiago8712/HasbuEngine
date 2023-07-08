@@ -1,3 +1,6 @@
 [submodule "Hasbu/vendor/imgui"]
 	path = Hasbu/vendor/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "Hasbu/vendor/entt"]
+	path = Hasbu/vendor/entt
+	url = https://github.com/skypjack/entt.git

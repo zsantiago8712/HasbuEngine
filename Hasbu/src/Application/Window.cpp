@@ -1,10 +1,7 @@
 #include "Application/Window.hpp"
-#include "DynamicAllocator.hpp"
-#include "EventDispatcher.hpp"
+#include "Application/EventDispatcher.hpp"
 #include "ImGuiLayer/ImguiLayer.hpp"
 #include "Utilities/Logger.hpp"
-#include "WindowData.hpp"
-#include "imgui.h"
 #include <GLFW/glfw3.h>
 
 static void initializedGLFW();
@@ -26,6 +23,15 @@ Window::Window(const unsigned int width, const unsigned int height)
         HASBU_DEBUG("SCROLL Curosr Postion: [X: {}, Y: {}]", xpos, ypos);
         EventDispatcher::dispatchMousEvent(MouseEvent::SCROLL, xpos, ypos);
     });
+
+    // glfwSetKeyCallback(this->m_data->m_window, []([[maybe_unused]] GLFWwindow* window, [[maybe_unused]] int key, [[maybe_unused]] int scancode, [[maybe_unused]] int action, [[maybe_unused]] int mods) {
+    //     const char* keyname = glfwGetKeyName(key, scancode);
+    //     if (action == GLFW_PRESS && !Gui::ImGuiLayer::wantCaptureKeyboard()) {
+    //         HASBU_DEBUG("KEY {} IS HAS BEEN PRESSED", (keyname != nullptr) ? keyname : "");
+    //         const auto event = getEvent(static_cast<Hasbu::KeyCode>(key));
+    //         EventDispatcher::dispatchKeyEvent(event);
+    //     }
+    // });
 };
 
 Window::Window()
@@ -46,16 +52,14 @@ Window::Window()
     });
 
     // TODO: make a better keyclalback
-    //  glfwSetKeyCallback(this->native_window, []([[maybe_unused]] GLFWwindow* window, [[maybe_unused]] int key, [[maybe_unused]] int scancode, [[maybe_unused]] int action, [[maybe_unused]] int mods) {
-    //      const char* keyname = glfwGetKeyName(key, scancode);
-    //      if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-    //          HASBU_DEBUG("KEY {} IS HAS BEEN PRESSED", (keyname != nullptr) ? keyname : "");
-    //          // const Hasbu::Event event = Hasbu::getEvent(static_cast<Hasbu::KeyCode>(key));
-    //          // EventDispatcher::dispatchKeyEvent(event);
-    //      } else {
-    //          HASBU_DEBUG("KEY {} IS HAS BEEN RELEASED", (keyname != nullptr) ? keyname : "");
-    //      }
-    //  });
+    // glfwSetKeyCallback(this->m_data->m_window, []([[maybe_unused]] GLFWwindow* window, [[maybe_unused]] int key, [[maybe_unused]] int scancode, [[maybe_unused]] int action, [[maybe_unused]] int mods) {
+    //     const char* keyname = glfwGetKeyName(ey, scancode);
+    //     if ((action == GLFW_PRESS || action == GLFW_REPEAT) && !Gui::ImGuiLayer::wantCaptureKeyboard()) {
+    //         HASBU_DEBUG("KEY {} IS HAS BEEN PRESSED", (keyname != nullptr) ? keyname : "");
+    //         const auto event = getEvent(static_cast<Hasbu::KeyCode>(key));
+    //         EventDispatcher::dispatchKeyEvent(event);
+    //     }
+    // });
 }
 
 void Window::update()

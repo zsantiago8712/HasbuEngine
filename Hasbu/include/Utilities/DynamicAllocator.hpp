@@ -72,6 +72,26 @@ struct AllocatorAdapter {
     {
         DynamicAllocator::deallocate(_pointer, _size);
     }
+
+    bool operator!=([[maybe_unused]] const AllocatorAdapter& other) const noexcept
+    {
+        // Como tu AllocatorAdapter no tiene ningún estado, puedes simplemente
+        // devolver false aquí, ya que dos instancias de AllocatorAdapter siempre
+        // serán "iguales" en términos de su estado.
+        return false;
+    }
+
+    template <class U, class... Args>
+    void construct(U* p, Args&&... args) const
+    {
+        new ((void*)p) U(std::forward<Args>(args)...);
+    }
+
+    template <class U>
+    void destroy(U* p) const
+    {
+        p->~U();
+    }
 };
 
 // Allocator Addapter especilized for maps

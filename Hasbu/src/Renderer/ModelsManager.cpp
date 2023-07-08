@@ -1,88 +1,134 @@
-#include "Renderer/ModelsManager.hpp"
-#include "RenderManager.hpp"
+#include "Application/EntityManager.hpp"
+#include "Components/MaterailComponents.hpp"
+#include "Components/MeshComponents.hpp"
 #include "Renderer/MeshManager.hpp"
 #include "Renderer/TextureManager.hpp"
-#include "Utilities/DynamicAllocator.hpp"
+#include "ShaderManager.hpp"
 #include "Utilities/Logger.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <iterator>
+
+void loadModel(const std::string_view& modelFile, Hasbu::Components::MeshComponents& meshComponents, Hasbu::Utils::Vector<unsigned int>& indices, Hasbu::Utils::Vector<unsigned int>& textures);
+void processNode(const std::string_view& dir, Hasbu::Components::MeshComponents& meshComponents, Hasbu::Utils::Vector<unsigned int>& indices, Hasbu::Utils::Vector<unsigned int>& textures, aiNode* node, const aiScene* scene);
+void loadMaterialTexture(const std::string_view& dir, Hasbu::Utils::Vector<unsigned int>& textures, aiMaterial* material, aiTextureType type, Hasbu::Render::TextureType textureType);
+void processMesh(const std::string_view& dir, Hasbu::Components::MeshComponents& meshComponents, Hasbu::Utils::Vector<unsigned int>& indices, Hasbu::Utils::Vector<unsigned int>& textures, aiMesh* mesh, const aiScene* scene);
 
 namespace Hasbu::Render {
 
-void processNode(Utils::Vector<unsigned int>& meshID, aiNode* node, const aiScene* scene);
-void loadMaterialTexture(Utils::Vector<unsigned int>& textures, aiMaterial* material, aiTextureType type, Hasbu::Render::TextureType textureType);
-unsigned int processMesh(aiMesh* mesh, const aiScene* scene);
-
-struct ModelsManager {
-
-    static ModelsManager& getInstance();
-    static std::string_view getDirectory();
-
-    Utils::Vector<Utils::Vector<unsigned int>> m_meshIDs;
-    Utils::Vector<std::string_view> m_directories;
-};
-
-ModelsManager& ModelsManager::getInstance()
+unsigned int createModelEntity(const std::string_view& vsShaderFile, const std::string_view& fsShaderFile)
 {
-    static ModelsManager manager;
-    return manager;
+    auto& entityManager = Core::EntityManager::getInstance();
+    entt::entity newModelEntity = entityManager.registry.create();
+
+    entityManager.registry.emplace<Components::MeshComponents>(newModelEntity);
+    entityManager.registry.emplace<Components::RenderComponents>(newModelEntity);
+    entityManager.registry.emplace<Components::MaterialComponents>(newModelEntity);
+
+    auto& materialComponents = entityManager.registry.get<Components::MaterialComponents>(newModelEntity);
+    materialComponents.shaderID = ShaderManager::createShader(vsShaderFile, fsShaderFile);
+
+    materialComponents.vsShader = vsShaderFile;
+    materialComponents.fsShader = fsShaderFile;
+
+    return static_cast<unsigned int>(newModelEntity);
 }
 
-std::string_view ModelsManager::getDirectory()
+unsigned int createStaticModelEntity()
 {
-    const auto& manager = ModelsManager::getInstance();
-    const auto size = manager.m_directories.size() - 1;
-    return manager.m_directories[size];
+    auto& entityManager = Core::EntityManager::getInstance();
+    entt::entity newModelEntity = entityManager.registry.create();
+
+    entityManager.registry.emplace<Components::MeshComponents>(newModelEntity);
+    entityManager.registry.emplace<Components::RenderComponents>(newModelEntity);
+
+    return static_cast<unsigned int>(newModelEntity);
 }
 
-unsigned int loadModel(const std::string_view& fileModel)
+void loadDynamicModelFromFile(const unsigned int modelID, const std::string_view& modelFile)
 {
-    auto& manager = ModelsManager::getInstance();
+    auto& entityManager = Core::EntityManager::getInstance();
+    auto& meshComponents = entityManager.registry.get<Components::MeshComponents>(static_cast<entt::entity>(modelID));
+    auto& renderComponents = entityManager.registry.get<Components::RenderComponents>(static_cast<entt::entity>(modelID));
+    auto& materialComponents = entityManager.registry.get<Components::MaterialComponents>(static_cast<entt::entity>(modelID));
+
+    Utils::Vector<Vertex> vertices;
+    Hasbu::Utils::Vector<unsigned int> indices;
+
+    loadModel(modelFile, meshComponents, indices, materialComponents.textures);
+    vertices.reserve(meshComponents.totalVertexCount);
+    for (const auto& vertex : meshComponents.vertices) {
+        vertices.insert(vertices.end(), std::make_move_iterator(vertex.begin()), std::make_move_iterator(vertex.end()));
+    }
+    meshComponents.meshID = MeshManager::createDynamicMesh(renderComponents, vertices, indices);
+}
+
+void loadStaticModelFromFile(const unsigned int modelID, const std::string_view& modelFile)
+{
+    auto& entityManager = Core::EntityManager::getInstance();
+    auto& meshComponents = entityManager.registry.get<Components::MeshComponents>(static_cast<entt::entity>(modelID));
+    auto& renderComponents = entityManager.registry.get<Components::RenderComponents>(static_cast<entt::entity>(modelID));
+    auto& materialComponents = entityManager.registry.get<Components::MaterialComponents>(static_cast<entt::entity>(modelID));
+
+    Utils::Vector<Vertex> vertices;
+    Hasbu::Utils::Vector<unsigned int> indices;
+
+    loadModel(modelFile, meshComponents, indices, materialComponents.textures);
+    vertices.reserve(meshComponents.totalVertexCount);
+    for (const auto& vertex : meshComponents.vertices) {
+        vertices.insert(vertices.end(), std::make_move_iterator(vertex.begin()), std::make_move_iterator(vertex.end()));
+    }
+    meshComponents.meshID = MeshManager::createStaticMesh(renderComponents, vertices, indices);
+}
+
+const Components::MaterialComponents& getModelMaterialComponents(const unsigned int modelID)
+{
+    auto& entityManager = Core::EntityManager::getInstance();
+    return entityManager.registry.get<Components::MaterialComponents>(static_cast<entt::entity>(modelID));
+}
+
+}
+
+void loadModel(const std::string_view& modelFile, Hasbu::Components::MeshComponents& meshComponents, Hasbu::Utils::Vector<unsigned int>& indices, Hasbu::Utils::Vector<unsigned int>& textures)
+{
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(fileModel.data(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices);
+    const aiScene* scene = importer.ReadFile(modelFile.data(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices);
 
     HASBU_ASSERT(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode, "ASSIMP ERROR")
+    const std::string_view dir = modelFile.substr(0, modelFile.find_last_of('/'));
 
-    const std::string_view dir = fileModel.substr(0, fileModel.find_last_of('/'));
-    manager.m_directories.push_back(dir);
-
-    Utils::Vector<unsigned int> temp;
-    processNode(temp, scene->mRootNode, scene);
-    manager.m_meshIDs.push_back(temp);
-
-    return static_cast<unsigned int>(manager.m_directories.size());
+    processNode(dir, meshComponents, indices, textures, scene->mRootNode, scene);
 }
 
-void drawModel(const unsigned int modelID, const unsigned int shaderID)
-{
-    const auto& manager = ModelsManager::getInstance();
-    for (const auto& meshID : manager.m_meshIDs[modelID - 1]) {
-        drawMesh(meshID, shaderID);
-    }
-}
-
-void processNode(Utils::Vector<unsigned int>& meshID, aiNode* node, const aiScene* scene)
+void processNode(const std::string_view& dir, Hasbu::Components::MeshComponents& meshComponents, Hasbu::Utils::Vector<unsigned int>& indices, Hasbu::Utils::Vector<unsigned int>& textures, aiNode* node, const aiScene* scene)
 {
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        meshID.push_back(processMesh(mesh, scene));
+        processMesh(dir, meshComponents, indices, textures, mesh, scene);
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
-        processNode(meshID, node->mChildren[i], scene);
+        processNode(dir, meshComponents, indices, textures, node->mChildren[i], scene);
     }
 }
 
-unsigned int processMesh(aiMesh* mesh, const aiScene* scene)
+void processMesh(const std::string_view& dir, Hasbu::Components::MeshComponents& meshComponents, Hasbu::Utils::Vector<unsigned int>& indices, Hasbu::Utils::Vector<unsigned int>& textures, aiMesh* mesh, const aiScene* scene)
 {
-    Utils::Vector<Hasbu::Render::Vertex> vertices;
-    Utils::Vector<unsigned int> indices;
-    Utils::Vector<unsigned int> textures;
+    const auto baseVertexIndex = meshComponents.totalVertexCount;
+    Hasbu::Utils::Vector<Hasbu::Render::Vertex> tempVertices;
+
+    const auto numMesh = static_cast<unsigned int>(meshComponents.vertices.size());
+    meshComponents.subMeshIds.push_back(numMesh);
+
+    tempVertices.reserve(mesh->mNumVertices);
+    meshComponents.vertices.emplace_back();
+    meshComponents.vertices[numMesh].reserve(mesh->mNumVertices);
+    meshComponents.totalVertexCount += mesh->mNumVertices;
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
 
-        const auto vertice = mesh->mVertices[i];
+        const auto vertex = mesh->mVertices[i];
         glm::vec2 textureCoords { 0.0f, 0.0f };
         glm::vec3 normals { 0.0f, 0.0f, 0.0f };
 
@@ -96,39 +142,46 @@ unsigned int processMesh(aiMesh* mesh, const aiScene* scene)
             textureCoords = { texture.x, texture.y };
         }
 
-        vertices.push_back({ .m_position = { vertice.x, vertice.y, vertice.z },
-            .m_normal = normals,
-            .m_textCoords = textureCoords });
+        tempVertices.push_back(
+            { .m_position = { vertex.x, vertex.y, vertex.z },
+                .m_normal = normals,
+                .m_textCoords = textureCoords });
     }
 
+
+    meshComponents.vertices[numMesh].insert(meshComponents.vertices[numMesh].end(), std::make_move_iterator(tempVertices.begin()), std::make_move_iterator(tempVertices.end()));
+    unsigned int totalIndices = 0;
     for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
-        aiFace face = mesh->mFaces[i];
-        indices.insert(indices.end(), face.mIndices, face.mIndices + face.mNumIndices);
+        const aiFace face = mesh->mFaces[i];
+        totalIndices += face.mNumIndices;
+        for (unsigned int j = 0; j < face.mNumIndices; j++) {
+            indices.push_back(baseVertexIndex + face.mIndices[j]);
+        }
     }
 
+    meshComponents.indexCountBySubMesh.push_back(totalIndices);
+    meshComponents.totalIndexCount += totalIndices;
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-    loadMaterialTexture(textures, material, aiTextureType_DIFFUSE, Hasbu::Render::TextureType::DIFFUSE);
-    loadMaterialTexture(textures, material, aiTextureType_SPECULAR, Hasbu::Render::TextureType::SPECULAR);
-    loadMaterialTexture(textures, material, aiTextureType_AMBIENT, Hasbu::Render::TextureType::HEIGHT);
-    loadMaterialTexture(textures, material, aiTextureType_HEIGHT, Hasbu::Render::TextureType::NORMAL);
 
-    return Hasbu::Render::createMesh(vertices, indices, textures);
+    loadMaterialTexture(dir, textures, material, aiTextureType_DIFFUSE, Hasbu::Render::TextureType::DIFFUSE);
+    loadMaterialTexture(dir, textures, material, aiTextureType_SPECULAR, Hasbu::Render::TextureType::SPECULAR);
+    loadMaterialTexture(dir, textures, material, aiTextureType_AMBIENT, Hasbu::Render::TextureType::HEIGHT);
+    loadMaterialTexture(dir, textures, material, aiTextureType_HEIGHT, Hasbu::Render::TextureType::NORMAL);
 }
 
-void loadMaterialTexture(Utils::Vector<unsigned int>& textures, aiMaterial* material, aiTextureType type, Hasbu::Render::TextureType textureType)
+void loadMaterialTexture(const std::string_view& dir, Hasbu::Utils::Vector<unsigned int>& textures, aiMaterial* material, aiTextureType type, Hasbu::Render::TextureType textureType)
 {
     for (unsigned int i = 0; i < material->GetTextureCount(type); i++) {
         aiString str;
         material->GetTexture(type, i, &str);
-        const auto dir = Hasbu::Render::ModelsManager::getDirectory();
         const auto textureFile = fmt::format("{}/{}", dir, str.data);
 
         unsigned int textureID = Hasbu::Render::TextureManager::isLoaded(textureFile.data());
 
         if (textureID == 0) {
             textureID = Hasbu::Render::TextureManager::createTexture(textureFile, textureType);
+            textures.push_back(textureID);
         }
-        textures.push_back(textureID);
+        // textures.push_back(textureID);
     }
-}
 }

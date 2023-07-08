@@ -22,7 +22,21 @@ public:
         return static_cast<float>(m_data->m_width) / static_cast<float>(m_data->m_height);
     }
 
+    constexpr float getWidth() const
+    {
+        return m_data->m_width;
+    }
+
+
+    constexpr float getHeight() const
+    {
+        return m_data->m_height;
+    }
+
+
     Utils::Unique<WindowData> m_data = Utils::createUnique<WindowData>(nullptr);
+
+
 };
 
 double getTime();

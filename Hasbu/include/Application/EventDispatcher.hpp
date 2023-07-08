@@ -13,8 +13,8 @@ namespace Hasbu::Core {
 
 enum class Event : unsigned int {
 
-    CAMARA = 1,
-    APPLCATION = 2,
+    CAMARA = 0,
+    APPLCATION = 1,
     UNKNOWN_EVENT,
 };
 
@@ -28,7 +28,7 @@ struct EventDispatcher {
     using EventKeyFn = std::function<void()>;
     using EventMouseFn = std::function<void(double xpos, double ypos)>;
 
-    explicit EventDispatcher(Render::Camera& camera);
+    explicit EventDispatcher();
 
     static void dispatchKeyEvent(Event event);
     static void dispatchMousEvent(MouseEvent event, const double xpos, const double ypos);

@@ -35,6 +35,7 @@ target_include_directories(HasbuLib PUBLIC
     # ${HASBULIB_INCLUDE_VENDOR_DIR}/Json
     ${HASBULIB_INCLUDE_VENDOR_DIR}/stb_image
     ${HASBULIB_INCLUDE_VENDOR_DIR}/imgui
+    ${HASBULIB_INCLUDE_VENDOR_DIR}/entt/src
 )
 
 # Find required packages and link them
@@ -52,6 +53,8 @@ foreach(PKG ${REQUIRED_LIBS})
             target_link_libraries(HasbuLib PUBLIC spdlog::spdlog)
         elseif(${PKG} STREQUAL "assimp")
             target_link_libraries(HasbuLib PUBLIC assimp)
+        elseif(${PKG} STREQUAL "sail")
+            target_link_libraries(HasbuLib PUBLIC sail)
         endif()
     else()
         message(FATAL_ERROR "${PKG} library not found")
@@ -60,7 +63,6 @@ endforeach()
 
 include_directories(/opt/homebrew/include)
 target_link_libraries(HasbuLib PUBLIC freeimage)
-
 
 # Validate the api to use
 if(USE_VULKAN)

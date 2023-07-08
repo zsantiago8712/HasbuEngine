@@ -1,44 +1,46 @@
 #include "Application/EventDispatcher.hpp"
 #include "Application/Application.hpp"
 #include "Application/KeyCodes.hpp"
-#include "Renderer/Camera.hpp"
+#include "RenderManager.hpp"
+// #include "Renderer/Camera.hpp"
+#include "Renderer/CamaraSystem.hpp"
 
 namespace Hasbu::Core {
 
 std::array<EventDispatcher::EventKeyFn, 3> EventDispatcher::key_events_functions;
 std::array<EventDispatcher::EventMouseFn, 2> EventDispatcher::mouse_events_functions;
 
-EventDispatcher::EventDispatcher(Render::Camera& camera)
+EventDispatcher::EventDispatcher()
 {
 
     EventDispatcher::mouse_events_functions = {
 
-        [&camera](const double xpos, const double ypos) {
-            camera.proccesMouseInput(xpos, ypos);
+        [](const double xpos, const double ypos) {
+            Render::CamaraSystem::processMauseInputCamera(xpos, ypos);
         },
-        [&camera](const double xpos, const double ypos) {
-            camera.processScroll(xpos, ypos);
+        [](const double xpos, const double ypos) {
+            Render::CamaraSystem::processMauseInputScrollCamera(xpos, ypos);
         }
 
     };
 
     // auto& app = Application::getInstace();
-    // EventDispatcher::key_events_functions = {
-    //     [&camera]() {
-    //         camera.proccesKeyBoard();
-    //     },
+    EventDispatcher::key_events_functions = {
+        []() {
+            Render::CamaraSystem::processKeyBoardInputCamera(Render::RenderManager::getLastDelta());
+        },
 
-    //     [&camera]() {
-    //         camera.proccesKeyBoard();
-    //     },
-    //     // [&app](const int& key) {
-    //     //     app.proccesInput(key);
-    //     // },
+        // [&camera]() {
+        //     camera.proccesKeyBoard();
+        // },
+        // [&app](const int& key) {
+        //     app.proccesInput(key);
+        // },
 
-    //     [&app]() {
-    //         app.proccesInput();
-    //     }
-    // };
+        // [&app]() {
+        //     app.proccesInput();
+        // }
+    };
 }
 
 void EventDispatcher::dispatchKeyEvent(Event event)
@@ -60,6 +62,9 @@ Event getEvent(Hasbu::KeyCode key)
     case Hasbu::KeyCode::S:
     case Hasbu::KeyCode::D:
     case Hasbu::KeyCode::A:
+    case Hasbu::KeyCode::KEY_1:
+    case Hasbu::KeyCode::KEY_2:
+    case Hasbu::KeyCode::KEY_3:
         return Event::CAMARA;
 
     case Hasbu::KeyCode::ESCAPE:

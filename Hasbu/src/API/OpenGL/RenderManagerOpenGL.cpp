@@ -3,59 +3,23 @@
 #include "Utilities/Logger.hpp"
 #include <GL/glew.h>
 
-static void createOpenGLContext();
-
-namespace Hasbu::ApiContext {
-
-struct RenderData {
-
-    Utils::Vector<unsigned int> vao;
-    Utils::Vector<unsigned int> vbo;
-    Utils::Vector<unsigned int> ebo;
-};
-
-void createVertexArray(unsigned int& id)
-{
-    glGenVertexArrays(1, &id);
-    glBindVertexArray(id);
-}
-
-void createVertexBuffer(unsigned int& id, std::span<Render::Vertex> vertices)
-{
-    glGenBuffers(1, &id);
-    glBindBuffer(GL_ARRAY_BUFFER, id);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Render::Vertex), &vertices[0], GL_STATIC_DRAW);
-}
-
-void createElementsVertexBuffer(unsigned int& id, std::span<unsigned int> indices)
-{
-    glGenBuffers(1, &id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-}
-
-}
-
 namespace Hasbu::Render {
 
-double RenderManager::m_lastFrame = 0.0f;
+constexpr std::size_t MAX_VERTEX_SIZE = 100 * 1000 * 5000 * sizeof(Render::Vertex);
+constexpr std::size_t MAX_INSTANCE_VERTEX_SIZE = 100 * 1000 * 5000 * sizeof(glm::mat4);
+constexpr std::size_t MAX_INDICES_SIZE = 1'000'000 * sizeof(unsigned int);
 
-RenderManager::RenderManager()
-    : m_api(RenderManager::API::GL)
-    , m_data(Utils::createUnique<ApiContext::RenderData>())
-{
-    createOpenGLContext();
-};
+double RenderManager::m_lastFrame = 0.0f;
+double RenderManager::m_deltaTime = 0.0f;
+RenderManager::API RenderManager::m_api = RenderManager::API::GL;
 
 void RenderManager::createRenderContext()
 {
-    getInstance();
-}
+    HASBU_ASSERT(GLEW_OK != glewInit(), "GLEW (OpenGL) failed to load")
 
-RenderManager& RenderManager::getInstance()
-{
-    static RenderManager renderManager;
-    return renderManager;
+    glEnable(GL_DEPTH_TEST);
+
+    HASBU_INFO("OPENGL succes to load {}", reinterpret_cast<const char*>((glGetString(GL_VERSION))));
 }
 
 void RenderManager::clearWindow(const float red, const float green, const float blue, const float alpha)
@@ -67,66 +31,138 @@ void RenderManager::clearWindow(const float red, const float green, const float 
 void RenderManager::drawElements(const unsigned int size)
 {
     glDrawElements(GL_TRIANGLES, size, GL_UNSIGNED_INT, nullptr);
+    CHECK_ERROR()
 }
 
-void RenderManager::drawElementsBaseVertex(const unsigned int size,  const unsigned int baseVertex)
+void RenderManager::drawElementsBaseVertex(const unsigned int size, const unsigned int baseVertex)
 {
-    glDrawElementsBaseVertex(GL_TRIANGLES, size, GL_UNSIGNED_INT, (void*) (sizeof(unsigned int) * 0), baseVertex);
+    glDrawElementsBaseVertex(GL_TRIANGLES, size, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 0), baseVertex);
 }
-
-
-
 
 unsigned int RenderManager::createVAO()
 {
-    unsigned int newVao = 0;
-    ApiContext::createVertexArray(newVao);
+    unsigned int newVAO = 0;
+    glGenVertexArrays(1, &newVAO);
+    glBindVertexArray(newVAO);
+    CHECK_ERROR()
 
-    RenderManager& manager = RenderManager::getInstance();
+    return newVAO;
+}
 
-    manager.m_data->vao.push_back(newVao);
-    return static_cast<unsigned int>(manager.m_data->vao.size());
+unsigned int RenderManager::createVBO()
+{
+    unsigned int newVBO = 0;
+    glGenBuffers(1, &newVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, newVBO);
+    CHECK_ERROR()
+
+    return newVBO;
+}
+
+unsigned int RenderManager::createEBO()
+{
+    unsigned int newEBO = 0;
+    glGenBuffers(1, &newEBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, newEBO);
+    CHECK_ERROR()
+
+    return newEBO;
 }
 
 unsigned int RenderManager::createVBO(const std::span<Vertex> vertices)
 {
     unsigned int newVBO = 0;
-    ApiContext::createVertexBuffer(newVBO, vertices);
+    glGenBuffers(1, &newVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, newVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+    CHECK_ERROR()
 
-    RenderManager& manager = RenderManager::getInstance();
-
-    manager.m_data->vbo.push_back(newVBO);
-    return static_cast<unsigned int>(manager.m_data->vbo.size());
+    return newVBO;
 }
 
 unsigned int RenderManager::createEBO(const std::span<unsigned int> indices)
 {
     unsigned int newEBO = 0;
-    ApiContext::createElementsVertexBuffer(newEBO, indices);
+    glGenBuffers(1, &newEBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, newEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+    CHECK_ERROR()
 
-    RenderManager& manager = RenderManager::getInstance();
-
-    manager.m_data->ebo.push_back(newEBO);
-
-    return static_cast<unsigned int>(manager.m_data->ebo.size());
+    return newEBO;
 }
 
-void RenderManager::bindVAO(const unsigned int id)
+unsigned int RenderManager::createDynamicVBO()
 {
-    RenderManager& manager = RenderManager::getInstance();
-    glBindVertexArray(manager.m_data->vao[id - 1]);
+    unsigned int newVBO = 0;
+    glGenBuffers(1, &newVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, newVBO);
+    glBufferData(GL_ARRAY_BUFFER, MAX_VERTEX_SIZE, nullptr, GL_DYNAMIC_DRAW);
+    CHECK_ERROR()
+
+    return newVBO;
 }
 
-void RenderManager::bindVBO(const unsigned int id)
+unsigned int RenderManager::createDynamicEBO()
 {
-    RenderManager& manager = RenderManager::getInstance();
-    glBindBuffer(GL_ARRAY_BUFFER, manager.m_data->vbo[id - 1]);
+    unsigned int newVBO = 0;
+    glGenBuffers(1, &newVBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, newVBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAX_INDICES_SIZE, nullptr, GL_STATIC_DRAW);
+    CHECK_ERROR()
+
+    return newVBO;
 }
 
-void RenderManager::bindEBO(const unsigned int id)
+unsigned int RenderManager::createDynamicVBO(const std::span<Vertex> vertices)
 {
-    RenderManager& manager = RenderManager::getInstance();
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, manager.m_data->ebo[id - 1]);
+    unsigned int newVBO = 0;
+    glGenBuffers(1, &newVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, newVBO);
+    glBufferData(GL_ARRAY_BUFFER, MAX_VERTEX_SIZE, nullptr, GL_DYNAMIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * vertices.size(), &vertices[0]);
+    CHECK_ERROR()
+
+    return newVBO;
+}
+
+unsigned int RenderManager::createDynamicEBO(const std::span<unsigned int> indices)
+{
+    unsigned int newVBO = 0;
+    glGenBuffers(1, &newVBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, newVBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAX_INDICES_SIZE, &indices[0], GL_STATIC_DRAW);
+    CHECK_ERROR()
+
+    return newVBO;
+}
+
+unsigned int RenderManager::createDynamicInstanceVBO()
+{
+    unsigned int newInstanceVBO = 0;
+    glGenBuffers(1, &newInstanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, newInstanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, MAX_INSTANCE_VERTEX_SIZE, nullptr, GL_DYNAMIC_DRAW);
+    CHECK_ERROR()
+
+    return newInstanceVBO;
+}
+
+void RenderManager::bindVAO(const unsigned int vao)
+{
+    glBindVertexArray(vao);
+    CHECK_ERROR()
+}
+
+void RenderManager::bindVBO(const unsigned int vbo)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    CHECK_ERROR()
+}
+
+void RenderManager::bindEBO(const unsigned int ebo)
+{
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    CHECK_ERROR()
 }
 
 void RenderManager::unbindVAO()
@@ -143,28 +179,49 @@ void RenderManager::unbindEBO()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void RenderManager::destroyVAO(unsigned int& id)
+void RenderManager::destroyVAO(unsigned int& vao)
 {
-    RenderManager& manager = RenderManager::getInstance();
-    glDeleteVertexArrays(1, &manager.m_data->vao[id - 1]);
-    manager.m_data->vao.erase(manager.m_data->vao.begin() + (id - 1));
-    id = 0;
+    glDeleteVertexArrays(1, &vao);
 }
 
-void RenderManager::destroyVBO(unsigned int& id)
+void RenderManager::destroyVBO(unsigned int& vbo)
 {
-    RenderManager& manager = RenderManager::getInstance();
-    glDeleteBuffers(1, &manager.m_data->vbo[id]);
-    manager.m_data->vbo.erase(manager.m_data->vbo.begin() + (id - 1));
-    id = 0;
+    glDeleteBuffers(1, &vbo);
 }
 
-void RenderManager::destroyEBO(unsigned int& id)
+void RenderManager::destroyEBO(unsigned int& ebo)
 {
-    RenderManager& manager = RenderManager::getInstance();
-    glDeleteBuffers(1, &manager.m_data->ebo[id]);
-    manager.m_data->ebo.erase(manager.m_data->ebo.begin() + (id - 1));
-    id = 0;
+    glDeleteBuffers(1, &ebo);
+}
+
+void RenderManager::addDataVBO(const unsigned int vbo, const std::span<Vertex> vertices)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+    CHECK_ERROR()
+}
+
+void RenderManager::addDataEBO(const unsigned int ebo, const std::span<unsigned> indices)
+{
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+    CHECK_ERROR()
+}
+
+void RenderManager::updateDataVBO(const unsigned int vbo, const unsigned int vertexCount, const std::span<Vertex> vertices)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    CHECK_ERROR()
+    glBufferSubData(GL_ARRAY_BUFFER, vertexCount, sizeof(Vertex) * vertices.size(), &vertices[0]);
+    CHECK_ERROR()
+}
+
+void RenderManager::updateDataEBO(const unsigned int ebo, const unsigned int indexCount, const std::span<unsigned int> indices)
+{
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    CHECK_ERROR()
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, indexCount, sizeof(unsigned int) * indices.size(), &indices[0]);
+    CHECK_ERROR()
 }
 
 void RenderManager::attribPointer(VertexAttrib attrib)
@@ -194,9 +251,14 @@ void RenderManager::attribPointer(VertexAttrib attrib)
 double RenderManager::getDeltaTime()
 {
     const double current_time = Core::getTime();
-    const double delta_time = current_time - m_lastFrame;
+    RenderManager::m_deltaTime = current_time - m_lastFrame;
     m_lastFrame = current_time;
-    return delta_time;
+    return RenderManager::m_deltaTime;
+}
+
+double RenderManager::getLastDelta()
+{
+    return RenderManager::m_deltaTime;
 }
 
 void RenderManager::checkError(const char* file, const int line)
@@ -204,36 +266,33 @@ void RenderManager::checkError(const char* file, const int line)
     unsigned int severity;
     do {
         severity = glGetError();
-        switch (severity) {
-        case GL_INVALID_ENUM:
-            HASBU_ERROR("[OPENGL]: INVALID_ENUM [FILE: {}; LINE: {}]", file, line);
-            break;
-        case GL_INVALID_VALUE:
-            HASBU_ERROR("[OPENGL]: INVALID_VALUE [FILE: {}; LINE: {}], file, line");
-            break;
-        case GL_STACK_OVERFLOW:
-            HASBU_WARNING("[OPENGL]: STACK_OVERFLOW [FILE: {}; LINE: {}]", file, line);
-            break;
-        case GL_OUT_OF_MEMORY:
-            HASBU_ERROR("[OPENGL]: STACK_UNDERFLOW [FILE: {}; LINE: {}]", file, line);
-            break;
-        case GL_INVALID_OPERATION:
-            HASBU_ERROR("[OPENGL]: INVALID_OPERATION [FILE: {}; LINE: {}]", file, line);
-            break;
-        case GL_INVALID_FRAMEBUFFER_OPERATION:
-            HASBU_ERROR("[OPENGL]: INVALID_FRAMEBUFFER [FILE: {}; LINE: {}]", file, line);
-            break;
+        if (severity != GL_NO_ERROR) {
+            switch (severity) {
+            case GL_INVALID_ENUM:
+                HASBU_ERROR("[OPENGL]: INVALID_ENUM [FILE: {}; LINE: {}]", file, line);
+                break;
+            case GL_INVALID_VALUE:
+                HASBU_ERROR("[OPENGL]: INVALID_VALUE [FILE: {}; LINE: {}]", file, line);
+                break;
+            case GL_STACK_OVERFLOW:
+                HASBU_WARNING("[OPENGL]: STACK_OVERFLOW [FILE: {}; LINE: {}]", file, line);
+                break;
+            case GL_OUT_OF_MEMORY:
+                HASBU_ERROR("[OPENGL]: STACK_UNDERFLOW [FILE: {}; LINE: {}]", file, line);
+                break;
+            case GL_INVALID_OPERATION:
+                HASBU_ERROR("[OPENGL]: INVALID_OPERATION [FILE: {}; LINE: {}]", file, line);
+                break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION:
+                HASBU_ERROR("[OPENGL]: INVALID_FRAMEBUFFER [FILE: {}; LINE: {}]", file, line);
+                break;
+            default:
+                HASBU_DEBUG("opengl: error codde {}", severity);
+                break;
+            }
         }
+
     } while (severity != GL_NO_ERROR);
 }
 
-}
-
-static void createOpenGLContext()
-{
-    HASBU_ASSERT(GLEW_OK != glewInit(), "GLEW (OpenGL) failed to load")
-
-    glEnable(GL_DEPTH_TEST);
-
-    HASBU_INFO("OPENGL succes to load {}", reinterpret_cast<const char*>((glGetString(GL_VERSION))));
 }

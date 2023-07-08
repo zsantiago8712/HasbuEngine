@@ -8,6 +8,7 @@
 static void compileShader(const unsigned int id);
 static void linkProgram(const unsigned int id_program);
 
+//TODO: implemnetar funcion para saber si el sahder ya fue cargado
 namespace Hasbu::ApiContext {
 
 struct ShaderData {
@@ -58,62 +59,26 @@ unsigned int ShaderManager::createShader(const std::string_view& vsFile, const s
     auto& manager = ShaderManager::getInstance();
     manager.m_data->ids.push_back(programID);
     manager.m_data->shaderFiles.push_back({ vsFile.data(), fsFile.data() });
-    return static_cast<unsigned int>(manager.m_data->ids.size());
+    return static_cast<unsigned int>(manager.m_data->ids.size() - 1);
 }
+
+
 
 void ShaderManager::deleteShader(unsigned int& id)
 {
     auto& manager = ShaderManager::getInstance();
-    glDeleteShader(manager.m_data->ids[id - 1]);
+    glDeleteShader(manager.m_data->ids[id ]);
 
-    manager.m_data->ids.erase(manager.m_data->ids.begin() + (id - 1));
-    manager.m_data->shaderFiles.erase(manager.m_data->shaderFiles.begin() + (id - 1));
+    manager.m_data->ids.erase(manager.m_data->ids.begin() + id);
+    manager.m_data->shaderFiles.erase(manager.m_data->shaderFiles.begin() + id);
 
     id = 0;
-}
-
-void ShaderManager::reaload()
-{
-
-    const auto& manager = ShaderManager::getInstance();
-    const auto size = manager.m_data->ids.size();
-
-    for (unsigned int i = 0; i < size; i++) {
-
-        const unsigned int programID = manager.m_data->ids[i];
-
-        const unsigned int vsID = glCreateShader(GL_VERTEX_SHADER);
-        const unsigned int fsID = glCreateShader(GL_FRAGMENT_SHADER);
-
-        const auto vsData = Utils::loadShader(manager.m_data->shaderFiles[i][0]);
-        const auto fsData = Utils::loadShader(manager.m_data->shaderFiles[i][1]);
-
-        const char* cVsData = vsData.c_str();
-        const char* cFsData = fsData.c_str();
-
-        glShaderSource(vsID, 1, &cVsData, nullptr);
-        glShaderSource(fsID, 1, &cFsData, nullptr);
-
-        compileShader(vsID);
-        compileShader(fsID);
-
-        glUseProgram(0);
-        glDetachShader(programID, vsID);
-        glDetachShader(programID, fsID);
-
-        glAttachShader(programID, vsID);
-        glAttachShader(programID, fsID);
-
-        linkProgram(programID);
-        glDeleteShader(vsID);
-        glDeleteShader(fsID);
-    }
 }
 
 void ShaderManager::bind(const unsigned int id)
 {
     const auto& manager = ShaderManager::getInstance();
-    glUseProgram(manager.m_data->ids[id - 1]);
+    glUseProgram(manager.m_data->ids[id]);
 }
 
 void ShaderManager::unBind()
@@ -124,25 +89,25 @@ void ShaderManager::unBind()
 void ShaderManager::setInt(const unsigned int id, const std::string_view& uniformName, const int data)
 {
     const auto& manager = ShaderManager::getInstance();
-    glUniform1i(glGetUniformLocation(manager.m_data->ids[id - 1], uniformName.data()), data);
+    glUniform1i(glGetUniformLocation(manager.m_data->ids[id], uniformName.data()), data);
 }
 
 void ShaderManager::setFloat(const unsigned int id, const std::string_view& uniformName, const float data)
 {
     const auto& manager = ShaderManager::getInstance();
-    glUniform1f(glGetUniformLocation(manager.m_data->ids[id - 1], uniformName.data()), data);
+    glUniform1f(glGetUniformLocation(manager.m_data->ids[id], uniformName.data()), data);
 }
 
 void ShaderManager::setVec3(const unsigned int id, const std::string_view& uniformName, const float* data)
 {
     const auto& manager = ShaderManager::getInstance();
-    glUniform3fv(glGetUniformLocation(manager.m_data->ids[id - 1], uniformName.data()), 1, data);
+    glUniform3fv(glGetUniformLocation(manager.m_data->ids[id], uniformName.data()), 1, data);
 }
 
 void ShaderManager::setM4f(const unsigned int id, const std::string_view& uniformName, const float* data)
 {
     const auto& manager = ShaderManager::getInstance();
-    glUniformMatrix4fv(glGetUniformLocation(manager.m_data->ids[id - 1], uniformName.data()), 1, GL_FALSE, data);
+    glUniformMatrix4fv(glGetUniformLocation(manager.m_data->ids[id], uniformName.data()), 1, GL_FALSE, data);
 }
 
 }

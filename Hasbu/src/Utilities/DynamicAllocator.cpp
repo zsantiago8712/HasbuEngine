@@ -33,11 +33,13 @@ DynamicAllocator::DynamicAllocator(const std::size_t& size)
 
 void* DynamicAllocator::_allocate(const std::size_t& size)
 {
-    HASBU_ASSERT(size < 0 && size > getDynamicAllocator().freeStorage, "Size must be grater than 0 and less than free storage")
+    auto& dynamicAllocator = getDynamicAllocator();
 
-    OffsetAllocator::Allocation allocation = getDynamicAllocator().offset_allocator.allocate(size);
+    HASBU_ASSERT(size < 0 && size > dynamicAllocator.freeStorage, "Size must be grater than 0 and less than free storage")
 
-    const auto find_it = std::ranges::find_if(getDynamicAllocator().allocations.begin(), getDynamicAllocator().allocations.end(), [allocation](OffsetAllocator::Allocation& s) {
+    OffsetAllocator::Allocation allocation = dynamicAllocator.offset_allocator.allocate(size);
+
+    const auto find_it = std::ranges::find_if(dynamicAllocator.allocations.begin(), dynamicAllocator.allocations.end(), [allocation](OffsetAllocator::Allocation& s) {
         if (s.offset == allocation.offset) {
             s.offset = allocation.offset;
             s.metadata = allocation.metadata;
@@ -47,33 +49,35 @@ void* DynamicAllocator::_allocate(const std::size_t& size)
         return false;
     });
 
-    if (find_it == getDynamicAllocator().allocations.end()) {
-        getDynamicAllocator().allocations.push_back(allocation);
+    if (find_it == dynamicAllocator.allocations.end()) {
+        dynamicAllocator.allocations.push_back(allocation);
     }
 
-    getDynamicAllocator().freeStorage -= size;
+    dynamicAllocator.freeStorage -= size;
 
-    return static_cast<char*>(getDynamicAllocator().block) + allocation.offset;
+    return static_cast<char*>(dynamicAllocator.block) + allocation.offset;
 }
 
 bool DynamicAllocator::_deallocate(void* ptr, const std::size_t& size)
 {
     HASBU_ASSERT(ptr == nullptr, "Ptr must not be nullptr")
-    const std::size_t offset_to_search = static_cast<char*>(ptr) - static_cast<char*>(getDynamicAllocator().block);
+    auto& dynamicAllocator = getDynamicAllocator();
 
-    const auto find_it = std::ranges::find_if(getDynamicAllocator().allocations.begin(), getDynamicAllocator().allocations.end(), [offset_to_search](OffsetAllocator::Allocation& s) {
+    const std::size_t offset_to_search = static_cast<char*>(ptr) - static_cast<char*>(dynamicAllocator.block);
+
+    const auto find_it = std::ranges::find_if(dynamicAllocator.allocations.begin(), dynamicAllocator.allocations.end(), [offset_to_search](OffsetAllocator::Allocation& s) {
         if (s.offset == offset_to_search) {
             return true;
         }
         return false;
     });
 
-    if (find_it != getDynamicAllocator().allocations.end()) {
-        getDynamicAllocator().offset_allocator.free(*find_it);
-        getDynamicAllocator().allocations.erase(find_it);
-        getDynamicAllocator().freeStorage += size;
+    if (find_it != dynamicAllocator.allocations.end()) {
+        dynamicAllocator.offset_allocator.free(*find_it);
+        dynamicAllocator.allocations.erase(find_it);
+        dynamicAllocator.freeStorage += size;
 
-        HASBU_INFO("Dealocated Allocation [{}] You still have #{} Allocations", ptr, getDynamicAllocator().allocations.size());
+        HASBU_INFO("Dealocated Allocation [{}] You still have #{} Allocations", ptr, dynamicAllocator.allocations.size());
 
         return true;
     } else {
@@ -87,6 +91,8 @@ DynamicAllocator::~DynamicAllocator()
     for (const auto& allocation : allocations) {
         offset_allocator.free(allocation);
     }
+
+    getReport();
 
     ::operator delete(this->block);
     this->freeStorage = 0;
